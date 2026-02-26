@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Literal, Optional
 
 Difficulty = Literal["easy", "normal", "hard"]
-Mode = Literal["word_flash", "survival", "odd_one_out"]
+Mode = Literal["word_flash", "survival", "odd_one_out", "letter_builder"]
 
 class ChildCreate(BaseModel):
     name: str = Field(min_length=1, max_length=64)

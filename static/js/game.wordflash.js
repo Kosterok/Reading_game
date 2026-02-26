@@ -23,8 +23,16 @@ let survDead = false; // умер по жизням
 let shownAt = 0;
 let hideTimer = null;
 let ringTimer = null;
+let lbTyped = "";
+let lbLocked = false;
+
+function lbReset() {
+  lbTyped = "";
+  lbLocked = false;
+}
 
 function choosePromptForMode(mode) {
+  if (mode === "letter_builder") return "";          // без подсказок
   if (mode === "odd_one_out") return "Выбери лишнее слово:";
   return "Выбери правильный вариант:";
 }
@@ -411,13 +419,13 @@ async function nextItem() {
 
   const it = items[idx];
 
+   if (gameMode === "letter_builder") lbReset();
   // UI baseline
   const optionsEl = $("options");
-  if (optionsEl) optionsEl.innerHTML = "";
+    if (optionsEl) optionsEl.classList.remove("lettersGrid");
 
-  setProgress((idx / items.length) * 100);
-
-  const wordEl = $("word");
+    const wordEl = $("word");
+    if (wordEl) wordEl.classList.remove("typedWord");
 
   // ======= ODD ONE OUT: без фазы "показа слова", подсказка не скрывается =======
   if (gameMode === "odd_one_out") {
@@ -436,9 +444,39 @@ async function nextItem() {
     if (shouldHintChoose(idx)) await playVoice("choose");
     shownAt = performance.now();
     renderOptions(it);
+    const optionsEl = $("options");
+      if (optionsEl) optionsEl.classList.add("lettersGrid");
+
+      const wordEl = $("word");
+      if (wordEl) wordEl.classList.add("typedWord");
     return;
   }
+ // ======= LETTER BUILDER: без подсказок и без показа правильного слова =======
+  if (gameMode === "letter_builder") {
+    clearTimers();
+    setRingVisible(false);
 
+    // В основном поле показываем то, что ребёнок собрал (пока пусто)
+    if (wordEl) {
+      wordEl.textContent = lbTyped || " ";
+      wordEl.classList.remove("hidden");
+    }
+
+    // Никаких подсказок / тостов
+    setToast("");
+
+    // Рисуем "options" как БУКВЫ
+    renderOptions(it);
+
+    // Старт реакции после фактической отрисовки
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        shownAt = performance.now();
+      });
+    });
+
+    return;
+  }
   // ======= Обычные режимы (word_flash / survival) =======
   setToast("Смотри на слово…");
 
@@ -491,6 +529,40 @@ function renderOptions(it) {
   if (!optionsEl) return;
   optionsEl.innerHTML = "";
 
+  // ===== letter_builder: options = буквы =====
+  if (gameMode === "letter_builder") {
+    const wordEl = $("word");
+    const right = (it.correct ?? it.target ?? "");
+    const needLen = right.length;
+
+    it.options.forEach(ch => {
+      const btn = document.createElement("button");
+      btn.className = "opt";
+      btn.textContent = ch;
+
+      btn.onclick = async () => {
+        if (lbLocked) return;
+
+        // нажали букву -> добавили, кнопку выключили
+        btn.disabled = true;
+        lbTyped += ch;
+
+        if (wordEl) wordEl.textContent = lbTyped || " ";
+
+        // набрали длину слова -> отправляем в стандартный answer()
+        if (lbTyped.length >= needLen) {
+          lbLocked = true;
+          await answer(it, lbTyped, null);
+        }
+      };
+
+      optionsEl.appendChild(btn);
+    });
+
+    return;
+  }
+
+  // ===== обычные режимы: options = слова =====
   it.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.className = "opt";

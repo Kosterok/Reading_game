@@ -332,3 +332,33 @@ def make_odd_one_out_items(n: int, difficulty: str, theme_id: int, options_k: in
             )
         )
     return items
+def make_letter_builder_items(n: int, difficulty: str, theme_id: int) -> list[WordFlashItem]:
+    """
+    letter_builder:
+    - target НЕ показываем (ставим пустую строку)
+    - correct = правильное слово (для проверки на фронте)
+    - options = перемешанные буквы слова
+    """
+    words = _pool_for(theme_id, difficulty)
+    pool = words[:]
+    random.shuffle(pool)
+
+    if len(pool) >= n:
+        pool = pool[:n]
+
+    items: list[WordFlashItem] = []
+    for i in range(n):
+        w = pool[i % len(pool)]
+        letters = list(w)
+        random.shuffle(letters)
+
+        items.append(
+            WordFlashItem(
+                item_id=f"lb_t{theme_id}_{difficulty}_{i}",
+                target="",               # важно: не показываем слово
+                options=letters,          # буквы-кнопки
+                prompt=None,              # никаких подсказок
+                correct=w,                # правильный ответ
+            )
+        )
+    return items

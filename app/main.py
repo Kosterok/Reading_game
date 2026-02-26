@@ -8,7 +8,13 @@ from fastapi.responses import FileResponse
 from .db import Base, engine, get_db
 from . import models, schemas
 from .content import make_word_flash_items
-from .content import make_word_flash_items, make_odd_one_out_items, list_themes, DEFAULT_THEME_ID
+from .content import (
+    make_word_flash_items,
+    make_odd_one_out_items,
+    make_letter_builder_items,
+    list_themes,
+    DEFAULT_THEME_ID,
+)
 
 DIFF_PRESETS = {
     "easy":   {"exposure": 1500, "min": 1100, "max": 2000, "items": 6, "options": 3, "step": 120},
@@ -102,6 +108,12 @@ def start_session(payload: schemas.SessionStartIn, db: Session = Depends(get_db)
             difficulty=payload.difficulty,
             theme_id=theme_id,
             options_k=options_k,
+        )
+    elif payload.mode == "letter_builder":
+        items = make_letter_builder_items(
+            items_total,
+            difficulty=payload.difficulty,
+            theme_id=theme_id,
         )
     else:
         items = make_word_flash_items(

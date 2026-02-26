@@ -134,6 +134,7 @@ h1{
   cursor:pointer;
   font-weight:900;
   text-align:left;
+  margin-top: 10px;
 }
 .gameCard:hover{border-color:var(--gold)}
 
@@ -580,6 +581,65 @@ a, label,
 .cselect.open{
   z-index: 99999;
 }
+#options.lettersGrid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+  gap: 14px;
+  padding: 14px 10px 6px;
+}
+
+/* Переопределяем стандартный вид .opt только когда сетка букв активна */
+#options.lettersGrid .opt{
+  height: 74px;
+  min-height: 74px;
+  width: 100%;
+  border-radius: 16px;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(10, 10, 12, 0.55);
+  border: 1px solid rgba(255, 210, 90, 0.35);
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.35),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+#options.lettersGrid .opt:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255, 210, 90, 0.7);
+}
+
+#options.lettersGrid .opt:active{
+  transform: translateY(0px) scale(0.98);
+}
+
+#options.lettersGrid .opt:disabled{
+  opacity: 0.35;
+  filter: grayscale(30%);
+  transform: none;
+}
+
+/* Поле собранного слова — крупно и читаемо */
+#word.typedWord{
+  font-size: 54px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  padding: 22px 18px;
+  border-radius: 18px;
+
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255, 210, 90, 0.22);
+  box-shadow: 0 10px 26px rgba(0,0,0,.35);
+
+  text-align: center;
+}
 </style>
 </head>
 
@@ -599,7 +659,7 @@ a, label,
     <div style="font-weight:900;font-size:18px">Выбор игры</div>
 
     <div class="games">
-      <div class="gameCard" id="pickWordFlash" style="weigh">
+      <div class="gameCard" id="pickWordFlash">
         ⚡ Молния слов
         <div style="font-size:13px;color:var(--muted);margin-top:6px">
           Тренировка скорости и внимания
@@ -615,6 +675,12 @@ a, label,
   🧩 Лишнее слово
   <div style="font-size:13px;color:var(--muted);margin-top:6px">
     Выбери слово, которое не подходит к остальным
+  </div>
+</div>
+     <div class="gameCard" id="pickLetterBuilder">
+  🔤 Собери слово
+  <div style="font-size:13px;color:var(--muted);margin-top:6px">
+    Собери слово из букв (без подсказок)
   </div>
 </div>
     </div>
@@ -802,6 +868,11 @@ document.getElementById("pickSurvival").onclick = () => {
 
 document.getElementById("pickOddOneOut").onclick = () => {
   window.rg_selected_mode = "odd_one_out";
+  show("setup");
+};
+
+document.getElementById("pickLetterBuilder").onclick = () => {
+  window.rg_selected_mode = "letter_builder";
   show("setup");
 };
 

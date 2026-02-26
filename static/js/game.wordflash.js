@@ -524,9 +524,14 @@ async function nextItem() {
   }, it.exposure_ms);
 }
 
-function renderOptions(it) {
+function renderOptions(it){
   const optionsEl = $("options");
-  if (!optionsEl) return;
+  if(!optionsEl) return;
+
+  // === ВАЖНО: включаем сетку плиток только для letter_builder ===
+  if (gameMode === "letter_builder") optionsEl.classList.add("lettersGrid");
+  else optionsEl.classList.remove("lettersGrid");
+
   optionsEl.innerHTML = "";
 
   // ===== letter_builder: options = буквы =====

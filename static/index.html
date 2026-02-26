@@ -312,6 +312,40 @@ select option{
     grid-template-columns: 1fr !important;
   }
 }
+/* ===== Letter Builder: плитки букв (override) ===== */
+/* важно: перебиваем .options{ grid-template-columns:1fr 1fr } */
+#options.lettersGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch;
+}
+
+/* перебиваем сильный стиль #options .opt (padding/радиусы/фон) */
+#options.lettersGrid .opt{
+  height: 76px;
+  min-height: 76px;
+  padding: 0 !important;
+  border-radius: 16px !important;
+
+  font-size: 36px !important;
+  font-weight: 900 !important;
+  letter-spacing: .02em;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  /* убираем “длинный” вид из-за внутренних эффектов */
+  text-align:center;
+}
+
+/* на очень узких экранах всё равно плитками, а не одной колонкой */
+@media (max-width: 520px){
+  #options.lettersGrid{
+    grid-template-columns: repeat(3, minmax(76px, 1fr)) !important;
+  }
+}
 /* ===== Глобальные кнопки (.btn) в стиле Хогвартса ===== */
 .btn{
   -webkit-appearance:none;
@@ -660,27 +694,27 @@ a, label,
 
     <div class="games">
       <div class="gameCard" id="pickWordFlash">
-        ⚡ Молния слов
+        ⚡ Искра Разума
         <div style="font-size:13px;color:var(--muted);margin-top:6px">
-          Тренировка скорости и внимания
+          Молниеносное чтение. Слово вспыхивает — ты отвечаешь, не давая вниманию угаснуть.
         </div>
       </div>
       <div class="gameCard" id="pickSurvival">
-  🛡️ Выживание
+  🛡️ Страж Знаний
   <div style="font-size:13px;color:var(--muted);margin-top:6px">
-    Ошибки отнимают жизни. 0 — конец игры
+    Ошибки отнимают силы. Три промаха — и магия рассеется.
   </div>
   </div>
       <div class="gameCard" id="pickOddOneOut">
-  🧩 Лишнее слово
+  🔎 Тень Лишнего
   <div style="font-size:13px;color:var(--muted);margin-top:6px">
-    Выбери слово, которое не подходит к остальным
+    Среди слов скрыта ошибка. Найди то, что нарушает гармонию.
   </div>
 </div>
      <div class="gameCard" id="pickLetterBuilder">
-  🔤 Собери слово
+  🔮 Алхимия Слова
   <div style="font-size:13px;color:var(--muted);margin-top:6px">
-    Собери слово из букв (без подсказок)
+    Соедини разрозненные буквы в цельное заклинание.
   </div>
 </div>
     </div>

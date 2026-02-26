@@ -79,7 +79,7 @@ let lastVoiceAt = 0;        // anti-spam timestamp
 const AUDIO = {
   start:  ["start_01.ogg", "start_02.ogg", "start_03.ogg", "start_04.ogg", "start_05.ogg"],
   look:   ["look_01.ogg", "look_02.ogg", "look_03.ogg"],
-  choose: ["choose_01.ogg", "choose_02.ogg", "choose_03.ogg"],
+  choose: ["choose_01.ogg", "choose_02.ogg"],
   good:   ["good_01.ogg", "good_02.ogg", "good_03.ogg"],
   almost: ["almost_01.ogg", "almost_02.ogg", "almost_03.ogg"],
   finish: ["finish_01.ogg", "finish_02.ogg", "finish_03.ogg"],
@@ -415,8 +415,32 @@ async function nextItem() {
   const optionsEl = $("options");
   if (optionsEl) optionsEl.innerHTML = "";
 
-  setToast("Смотри на слово…");
   setProgress((idx / items.length) * 100);
+
+  const wordEl = $("word");
+
+  // ======= ODD ONE OUT: без фазы "показа слова", подсказка не скрывается =======
+  if (gameMode === "odd_one_out") {
+    clearTimers();
+    setRingVisible(false);
+
+    // подсказка в основном поле
+    if (wordEl) {
+      wordEl.textContent = (it.prompt ?? "Выбери лишнее слово:");
+      wordEl.classList.remove("hidden");
+    }
+
+    // можно оставить toast пустым, чтобы не дублировать
+    setToast("");
+
+    if (shouldHintChoose(idx)) await playVoice("choose");
+    shownAt = performance.now();
+    renderOptions(it);
+    return;
+  }
+
+  // ======= Обычные режимы (word_flash / survival) =======
+  setToast("Смотри на слово…");
 
   // Soft hints
   if (shouldHintLook(idx)) {
@@ -424,7 +448,6 @@ async function nextItem() {
   }
 
   // Show word
-  const wordEl = $("word");
   if (wordEl) {
     wordEl.textContent = (it.prompt ?? it.target ?? "");
     wordEl.classList.remove("hidden");
@@ -451,10 +474,15 @@ async function nextItem() {
     if (wordEl) wordEl.classList.add("hidden");
     setRingVisible(false);
 
-    setToast(choosePromptForMode(gameMode));
+    setToast("Выбери правильный вариант:");
     if (shouldHintChoose(idx)) await playVoice("choose");
-    shownAt = performance.now();
     renderOptions(it);
+    // фиксируем старт реакции после реальной отрисовки
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        shownAt = performance.now();
+      });
+    });
   }, it.exposure_ms);
 }
 

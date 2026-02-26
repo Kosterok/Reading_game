@@ -132,5 +132,13 @@ def make_odd_one_out_items(n: int, difficulty: str, theme_id: int, options_k: in
 
         options = options[:options_k]
         random.shuffle(options)
-        items.append(WordFlashItem(item_id=f"ooo_t{theme_id}_{difficulty}_{i}", target=odd, options=options))
+        items.append(
+            WordFlashItem(
+                item_id=f"ooo_t{theme_id}_{difficulty}_{i}",
+                target="",  # важно: НЕ показываем ответ на этапе "показа"
+                options=options,
+                prompt="Выбери лишнее слово",
+                correct=odd,
+            )
+        )
     return items

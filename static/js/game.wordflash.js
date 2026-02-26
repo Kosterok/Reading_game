@@ -116,12 +116,11 @@ function renderSoundIcon() {
   btn.title = soundOn ? "Звук включён" : "Звук выключен";
 }
 
-function toggleSound() {
+window.toggleSound = function() {
   soundOn = !soundOn;
   localStorage.setItem("rg_sound_on", soundOn ? "1" : "0");
-  if (!soundOn) stopAudio(true);
   renderSoundIcon();
-}
+};
 
 // priority:
 // - "voice" lines: do not interrupt by default

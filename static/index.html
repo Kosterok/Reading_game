@@ -718,10 +718,46 @@ a, label,
     Соедини разрозненные буквы в цельное заклинание.
   </div>
 </div>
+      <div class="gameCard" id="btnStats">
+  📊 Статистика
+</div>
+     <div class="gameCard" id="openSettings">
+  ⚙ Настройки
+</div>
     </div>
   </div>
 </section>
+<!-- ================== НАСТРОЙКИ ОБЩИЕ ================== -->
+<section id="screen-settings" class="screen">
+  <div style="margin-bottom:12px;">
+    <button class="btn btn-ghost" id="backFromSettings">← Назад</button>
+  </div>
 
+  <div class="card">
+    <div style="font-weight:900;font-size:18px;">Настройки</div>
+
+    <!-- Игрок -->
+    <div style="margin-top:16px;font-weight:900;">Активный игрок</div>
+    <div class="cselect" data-for="settingsChildSelect" style="margin-top:8px;">
+  <select id="settingsChildSelect"></select>
+  <button type="button" class="cselect__btn"></button>
+  <div class="cselect__list" role="listbox"></div>
+</div>
+
+    <!-- Добавить игрока -->
+    <div style="margin-top:16px;font-weight:900;">Добавить игрока</div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <input id="newChildName" placeholder="Имя ребёнка"/>
+      <button class="btn btn-primary" id="addChildBtn">Добавить</button>
+    </div>
+
+    <!-- Звук -->
+    <div style="margin-top:20px;font-weight:900;">Звук</div>
+    <div style="margin-top:8px;">
+      <button class="btn" id="toggleSoundBtn">—</button>
+    </div>
+  </div>
+</section>
 <!-- ================== НАСТРОЙКИ ================== -->
 <section id="screen-setup" class="screen">
   <div class="card">
@@ -858,6 +894,55 @@ a, label,
     </div>
   </div>
 </section>
+ <!-- ================== СТАТИСТИКА ================== -->
+<section id="screen-stats" class="screen">
+  <div style="margin-bottom:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+    <button class="btn btn-ghost" id="backFromStats">← Назад</button>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn" id="tabStatsChild">👤 Выбранный игрок</button>
+      <button class="btn btn-primary" id="tabStatsAll">👥 Все игроки</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:900;font-size:18px">Статистика</div>
+    <div style="color:var(--muted); font-weight:900; margin-top:6px" id="statsSubtitle">
+      —
+    </div>
+
+    <!-- ===== Вкладка: выбранный игрок ===== -->
+    <div id="statsChildView" style="margin-top:16px; display:none;">
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+        <div style="border:1px solid var(--line); border-radius:14px; padding:10px 12px; background:rgba(0,0,0,.18);">
+          <div style="font-size:22px;font-weight:900;" id="childTotalSessions">—</div>
+          <div style="color:var(--muted);font-weight:900;font-size:13px;">Всего игр</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:14px; padding:10px 12px; background:rgba(0,0,0,.18);">
+          <div style="font-size:22px;font-weight:900;" id="childAvgAcc">—</div>
+          <div style="color:var(--muted);font-weight:900;font-size:13px;">Средняя точность</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:14px; padding:10px 12px; background:rgba(0,0,0,.18);">
+          <div style="font-size:22px;font-weight:900;" id="childAvgReact">—</div>
+          <div style="color:var(--muted);font-weight:900;font-size:13px;">Средняя реакция</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; font-weight:900;">По режимам</div>
+      <div id="childModesTable" style="margin-top:10px; overflow:auto;"></div>
+    </div>
+
+    <!-- ===== Вкладка: все игроки ===== -->
+    <div id="statsAllView" style="margin-top:16px; display:none;">
+      <div style="font-weight:900;">Игроки и режимы</div>
+      <div id="allPlayersTable" style="margin-top:10px; overflow:auto;"></div>
+    </div>
+
+    <div id="statsEmpty" style="margin-top:12px; color:var(--muted); font-weight:900; display:none;">
+      Нет данных: сыграйте хотя бы одну завершённую игру.
+    </div>
+  </div>
+</section>
 
 </div>
 <script>
@@ -878,15 +963,19 @@ const sPlay  = document.getElementById("screen-play");
 const sRes   = document.getElementById("screen-result");
 
 function show(screen){
-  [sMain,sSetup,sPlay,sRes].forEach(s => s.classList.remove("active"));
-  if(screen==="main")  sMain.classList.add("active");
-  if(screen==="setup") sSetup.classList.add("active");
-  if(screen==="play")  sPlay.classList.add("active");
+  const sStats = document.getElementById("screen-stats");
+const sSettings = document.getElementById("screen-settings");
+[sMain, sSetup, sPlay, sRes, sStats, sSettings]
+  .filter(Boolean)
+  .forEach(s => s.classList.remove("active"));
+  if(screen==="settings") sSettings.classList.add("active");
+  if(screen==="main")   sMain.classList.add("active");
+  if(screen==="setup")  sSetup.classList.add("active");
+  if(screen==="play")   sPlay.classList.add("active");
   if(screen==="result") sRes.classList.add("active");
+  if(screen==="stats")  sStats.classList.add("active");
 
-  // ВОТ ЭТО ДОБАВЬ:
-  document.body.className =
-    "screen-" + screen;
+  document.body.className = "screen-" + screen;
 }
 
 // Навигация
@@ -910,6 +999,29 @@ document.getElementById("pickLetterBuilder").onclick = () => {
   window.rg_selected_mode = "letter_builder";
   show("setup");
 };
+
+document.getElementById("btnStats").onclick = async () => {
+  const sel = document.getElementById("childSelect");
+  if (!sel || !sel.value) {
+    alert("Сначала выберите ребёнка в настройках");
+    return;
+  }
+
+  const childId = parseInt(sel.value, 10);
+
+  const res = await fetch(`/api/stats/${childId}`);
+  const data = await res.json();
+
+  document.getElementById("statsGames").textContent = data.total_sessions;
+  document.getElementById("statsAcc").textContent =
+    Math.round(data.avg_accuracy * 100) + "%";
+  document.getElementById("statsReact").textContent =
+    Math.round(data.avg_reaction_ms) + " мс";
+
+  show("stats");
+};
+
+document.getElementById("backFromStats").onclick = () => show("main");
 
 document.getElementById("backToMain").onclick = () => show("main");
 
@@ -942,6 +1054,181 @@ window.addEventListener("load", () => {
     };
   }
 });
+
+// ===== Stats UI =====
+const MODE_TITLES = {
+  word_flash: "⚡ Искра Разума",
+  survival: "🛡️ Страж Знаний",
+  odd_one_out: "🔎 Тень Лишнего",
+  letter_builder: "🔮 Алхимия Слова"
+};
+
+function fmtPct01(x){
+  const v = Number(x || 0);
+  return Math.round(v * 100) + "%";
+}
+function fmtMs(x){
+  const v = Number(x || 0);
+  return Math.round(v) + " мс";
+}
+
+function setStatsTab(tab){
+  const vChild = document.getElementById("statsChildView");
+  const vAll = document.getElementById("statsAllView");
+  const bChild = document.getElementById("tabStatsChild");
+  const bAll = document.getElementById("tabStatsAll");
+
+  if(tab === "child"){
+    vChild.style.display = "block";
+    vAll.style.display = "none";
+    bChild.classList.add("btn-primary");
+    bAll.classList.remove("btn-primary");
+  } else {
+    vAll.style.display = "block";
+    vChild.style.display = "none";
+    bAll.classList.add("btn-primary");
+    bChild.classList.remove("btn-primary");
+  }
+}
+
+function renderChildModes(childData){
+  // childData: {child_id, child_name, total_sessions, modes:[...]}
+  const subtitle = document.getElementById("statsSubtitle");
+  subtitle.textContent = `Игрок: ${childData.child_name}`;
+
+  document.getElementById("childTotalSessions").textContent = childData.total_sessions;
+
+  // агрегаты по всем режимам
+  let attempts = 0, accSum = 0, reactSum = 0;
+  (childData.modes || []).forEach(m => {
+    attempts += (m.attempts || 0);
+    accSum += (m.avg_accuracy || 0) * (m.attempts || 0);
+    reactSum += (m.avg_reaction_ms || 0) * (m.attempts || 0);
+  });
+
+  const avgAcc = attempts ? (accSum / attempts) : 0;
+  const avgReact = attempts ? (reactSum / attempts) : 0;
+
+  document.getElementById("childAvgAcc").textContent = fmtPct01(avgAcc);
+  document.getElementById("childAvgReact").textContent = fmtMs(avgReact);
+
+  const wrap = document.getElementById("childModesTable");
+  const rows = (childData.modes || []).map(m => `
+    <tr>
+      <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18); font-weight:900;">
+        ${MODE_TITLES[m.mode] || m.mode}
+      </td>
+      <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${m.sessions}</td>
+      <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${m.attempts}</td>
+      <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${fmtPct01(m.avg_accuracy)}</td>
+      <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${fmtMs(m.avg_reaction_ms)}</td>
+    </tr>
+  `).join("");
+
+  wrap.innerHTML = `
+    <table style="width:100%; border-collapse:collapse; border:1px solid rgba(212,175,55,.22); border-radius:14px; overflow:hidden;">
+      <thead>
+        <tr style="background:rgba(0,0,0,.22);">
+          <th style="text-align:left; padding:10px 12px;">Режим</th>
+          <th style="text-align:left; padding:10px 12px;">Игры</th>
+          <th style="text-align:left; padding:10px 12px;">Ответы</th>
+          <th style="text-align:left; padding:10px 12px;">Точность</th>
+          <th style="text-align:left; padding:10px 12px;">Реакция</th>
+        </tr>
+      </thead>
+      <tbody>${rows || ""}</tbody>
+    </table>
+  `;
+}
+
+function renderAllPlayers(allData){
+  // allData: {total_children, children:[{child_name, modes:[...]}]}
+  const subtitle = document.getElementById("statsSubtitle");
+  subtitle.textContent = `Игроков: ${allData.total_children}`;
+
+  const wrap = document.getElementById("allPlayersTable");
+
+  const rows = (allData.children || []).flatMap(ch => {
+    const modes = (ch.modes || []);
+    if (!modes.length) {
+      return [`
+        <tr>
+          <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18); font-weight:900;">${ch.child_name}</td>
+          <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">—</td>
+          <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">0</td>
+          <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">0</td>
+          <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">0%</td>
+          <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">0 мс</td>
+        </tr>
+      `];
+    }
+    return modes.map(m => `
+      <tr>
+        <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18); font-weight:900;">${ch.child_name}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${MODE_TITLES[m.mode] || m.mode}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${m.sessions}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${m.attempts}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${fmtPct01(m.avg_accuracy)}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid rgba(212,175,55,.18);">${fmtMs(m.avg_reaction_ms)}</td>
+      </tr>
+    `);
+  }).join("");
+
+  wrap.innerHTML = `
+    <table style="width:100%; border-collapse:collapse; border:1px solid rgba(212,175,55,.22); border-radius:14px; overflow:hidden;">
+      <thead>
+        <tr style="background:rgba(0,0,0,.22);">
+          <th style="text-align:left; padding:10px 12px;">Игрок</th>
+          <th style="text-align:left; padding:10px 12px;">Режим</th>
+          <th style="text-align:left; padding:10px 12px;">Игры</th>
+          <th style="text-align:left; padding:10px 12px;">Ответы</th>
+          <th style="text-align:left; padding:10px 12px;">Точность</th>
+          <th style="text-align:left; padding:10px 12px;">Реакция</th>
+        </tr>
+      </thead>
+      <tbody>${rows || ""}</tbody>
+    </table>
+  `;
+}
+
+async function loadStatsAll(){
+  document.getElementById("statsEmpty").style.display = "none";
+  const data = await (await fetch("/api/stats/children")).json();
+  // если совсем нет завершённых игр
+  const anySessions = (data.children || []).some(c => (c.total_sessions || 0) > 0);
+  if (!anySessions) document.getElementById("statsEmpty").style.display = "block";
+  renderAllPlayers(data);
+}
+
+async function loadStatsChild(){
+  document.getElementById("statsEmpty").style.display = "none";
+  const sel = document.getElementById("childSelect");
+  if (!sel || !sel.value) { document.getElementById("statsEmpty").style.display = "block"; return; }
+
+  const childId = parseInt(sel.value, 10);
+  const data = await (await fetch(`/api/stats/children/${childId}`)).json();
+  if (!data.total_sessions) document.getElementById("statsEmpty").style.display = "block";
+  renderChildModes(data);
+}
+
+// кнопки/табы
+document.getElementById("tabStatsAll").onclick = async () => {
+  setStatsTab("all");
+  await loadStatsAll();
+};
+document.getElementById("tabStatsChild").onclick = async () => {
+  setStatsTab("child");
+  await loadStatsChild();
+};
+document.getElementById("backFromStats").onclick = () => show("main");
+
+// вход в статистику с главной
+document.getElementById("btnStats").onclick = async () => {
+  show("stats");
+  // по умолчанию открываем "Все игроки"
+  setStatsTab("all");
+  await loadStatsAll();
+};
 </script>
 <script>
 (() => {
@@ -1184,6 +1471,84 @@ window.sparksBurst = function (x, y, n = 36) {
     if (btn.classList.contains("ok")) window.sparksBurst(x, y, 34, 1.9);
     else window.sparksBurst(x, y, 22, 1.4);
   }, { passive: true });
+
+  // ===== SETTINGS =====
+
+async function loadSettingsChildren(){
+  const sel = document.getElementById("settingsChildSelect");
+  const gameSel = document.getElementById("childSelect");
+  if (!sel) return;
+
+  const list = await (await fetch("/api/children")).json();
+
+  sel.innerHTML = "";
+  list.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+
+  // синхронизируем с игровым селектом
+  if (gameSel && gameSel.value) sel.value = gameSel.value;
+  sel.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function syncActiveChild(){
+  const sel = document.getElementById("settingsChildSelect");
+  const gameSel = document.getElementById("childSelect");
+  if (!sel || !gameSel) return;
+
+  gameSel.value = sel.value;
+  gameSel.dispatchEvent(new Event("change", { bubbles:true }));
+}
+
+async function addNewChild(){
+  const input = document.getElementById("newChildName");
+  const name = input.value.trim();
+  if (!name) return;
+
+  await fetch("/api/children", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({name})
+  });
+
+  input.value = "";
+  await loadSettingsChildren();
+  await loadChildren(); // из game.wordflash.js
+}
+
+function updateSoundButton(){
+  const btn = document.getElementById("toggleSoundBtn");
+  if (!btn) return;
+
+  const on = localStorage.getItem("rg_sound_on");
+  const enabled = (on === null || on === "1");
+
+  btn.textContent = enabled ? "🔊 Звук включён" : "🔇 Звук выключен";
+}
+
+function toggleSoundFromSettings(){
+  if (typeof window.toggleSound === "function") {
+    window.toggleSound();
+  }
+  updateSoundButton();
+}
+
+// Навигация
+document.getElementById("openSettings").onclick = async () => {
+  await loadSettingsChildren();
+  updateSoundButton();
+  show("settings");
+};
+
+document.getElementById("backFromSettings").onclick = () => show("main");
+
+document.getElementById("settingsChildSelect").onchange = syncActiveChild;
+document.getElementById("addChildBtn").onclick = addNewChild;
+document.getElementById("toggleSoundBtn").onclick = toggleSoundFromSettings;
 </script>
+
 </body>
 </html>

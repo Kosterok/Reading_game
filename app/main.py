@@ -233,3 +233,128 @@ def finish_session(session_id: int, db: Session = Depends(get_db)):
         avg_reaction_ms=avg_reaction_ms,
         next_exposure_ms=int(next_exposure),
     )
+
+def _calc_child_stats_by_mode(child: models.Child, db: Session) -> schemas.ChildStatsByModeOut:
+    # берем только завершённые сессии
+    sessions = (
+        db.query(models.Session)
+        .filter(
+            models.Session.child_id == child.id,
+            models.Session.finished_at.isnot(None),
+        )
+        .all()
+    )
+
+    by_mode: dict[str, list[models.Session]] = {}
+    for s in sessions:
+        by_mode.setdefault(s.mode, []).append(s)
+
+    modes_out: list[schemas.ModeStatsOut] = []
+
+    for mode, mode_sessions in by_mode.items():
+        session_ids = [s.id for s in mode_sessions]
+
+        attempts = (
+            db.query(models.Attempt)
+            .filter(models.Attempt.session_id.in_(session_ids))
+            .all()
+        )
+
+        attempts_n = len(attempts)
+        correct_n = sum(1 for a in attempts if a.correct)
+        reaction_sum = sum(a.reaction_ms for a in attempts)
+
+        avg_accuracy = (correct_n / attempts_n) if attempts_n else 0.0
+        avg_reaction_ms = (reaction_sum / attempts_n) if attempts_n else 0.0
+
+        modes_out.append(
+            schemas.ModeStatsOut(
+                mode=mode,  # type: ignore[arg-type]
+                sessions=len(mode_sessions),
+                attempts=attempts_n,
+                avg_accuracy=avg_accuracy,
+                avg_reaction_ms=avg_reaction_ms,
+            )
+        )
+
+    # стабильный порядок
+    order = {"word_flash": 0, "survival": 1, "odd_one_out": 2, "letter_builder": 3}
+    modes_out.sort(key=lambda x: order.get(x.mode, 99))
+
+    return schemas.ChildStatsByModeOut(
+        child_id=child.id,
+        child_name=child.name,
+        total_sessions=len(sessions),
+        modes=modes_out,
+    )
+
+@app.get("/api/stats/summary/{child_id}", response_model=schemas.ChildStatsOut)
+def get_stats(child_id: int, db: Session = Depends(get_db)):
+    child = db.get(models.Child, child_id)
+    if not child:
+        raise HTTPException(404, "Child not found")
+
+    sessions = (
+        db.query(models.Session)
+        .filter(
+            models.Session.child_id == child_id,
+            models.Session.finished_at.isnot(None),
+        )
+        .all()
+    )
+
+    total_sessions = len(sessions)
+    if total_sessions == 0:
+        return schemas.ChildStatsOut(
+            child_id=child_id,
+            total_sessions=0,
+            avg_accuracy=0.0,
+            avg_reaction_ms=0.0,
+        )
+
+    total_attempts = 0
+    total_correct = 0
+    total_reaction = 0
+
+    for s in sessions:
+        attempts = (
+            db.query(models.Attempt)
+            .filter(models.Attempt.session_id == s.id)
+            .all()
+        )
+
+        total_attempts += len(attempts)
+        total_correct += sum(1 for a in attempts if a.correct)
+        total_reaction += sum(a.reaction_ms for a in attempts)
+
+    avg_accuracy = (total_correct / total_attempts) if total_attempts else 0.0
+    avg_reaction_ms = (total_reaction / total_attempts) if total_attempts else 0.0
+
+    return schemas.ChildStatsOut(
+        child_id=child_id,
+        total_sessions=total_sessions,
+        avg_accuracy=avg_accuracy,
+        avg_reaction_ms=avg_reaction_ms,
+    )
+
+@app.get("/api/stats/children/{child_id}", response_model=schemas.ChildStatsByModeOut)
+def get_child_stats_by_mode(child_id: int, db: Session = Depends(get_db)):
+    child = db.get(models.Child, child_id)
+    if not child:
+        raise HTTPException(404, "Child not found")
+
+    return _calc_child_stats_by_mode(child, db)
+
+@app.get("/api/stats/children", response_model=schemas.AllChildrenStatsOut)
+def get_all_children_stats(db: Session = Depends(get_db)):
+    children = db.query(models.Child).order_by(models.Child.id.asc()).all()
+
+    out = [
+        _calc_child_stats_by_mode(c, db)
+        for c in children
+    ]
+
+    return schemas.AllChildrenStatsOut(
+        total_children=len(children),
+        children=out,
+    )

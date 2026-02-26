@@ -47,3 +47,26 @@ class SessionFinishOut(BaseModel):
     accuracy: float
     avg_reaction_ms: float
     next_exposure_ms: int
+
+class ChildStatsOut(BaseModel):
+    child_id: int
+    total_sessions: int
+    avg_accuracy: float
+    avg_reaction_ms: float
+
+class ModeStatsOut(BaseModel):
+    mode: Mode
+    sessions: int
+    attempts: int
+    avg_accuracy: float
+    avg_reaction_ms: float
+
+class ChildStatsByModeOut(BaseModel):
+    child_id: int
+    child_name: str
+    total_sessions: int
+    modes: list[ModeStatsOut]
+
+class AllChildrenStatsOut(BaseModel):
+    total_children: int
+    children: list[ChildStatsByModeOut]

@@ -418,7 +418,8 @@ async function nextItem() {
   if (!items || idx >= items.length) return finish();
 
   const it = items[idx];
-
+    resetOptionsUI();
+    clearTimers();
    if (gameMode === "letter_builder") lbReset();
   // UI baseline
   const optionsEl = $("options");
@@ -427,30 +428,30 @@ async function nextItem() {
     const wordEl = $("word");
     if (wordEl) wordEl.classList.remove("typedWord");
 
-  // ======= ODD ONE OUT: без фазы "показа слова", подсказка не скрывается =======
-  if (gameMode === "odd_one_out") {
-    clearTimers();
-    setRingVisible(false);
+// ======= ODD ONE OUT: без фазы "показа слова", подсказка не скрывается =======
+if (gameMode === "odd_one_out") {
+  clearTimers();
+  setRingVisible(false);
 
-    // подсказка в основном поле
-    if (wordEl) {
-      wordEl.textContent = (it.prompt ?? "Выбери лишнее слово:");
-      wordEl.classList.remove("hidden");
-    }
-
-    // можно оставить toast пустым, чтобы не дублировать
-    setToast("");
-
-    if (shouldHintChoose(idx)) await playVoice("choose");
-    shownAt = performance.now();
-    renderOptions(it);
-    const optionsEl = $("options");
-      if (optionsEl) optionsEl.classList.add("lettersGrid");
-
-      const wordEl = $("word");
-      if (wordEl) wordEl.classList.add("typedWord");
-    return;
+  if (wordEl) {
+    wordEl.textContent = (it.prompt ?? "Выбери лишнее слово:");
+    wordEl.classList.remove("hidden");
   }
+
+  setToast("");
+  if (shouldHintChoose(idx)) await playVoice("choose");
+
+  renderOptions(it);
+
+  // старт реакции после реальной отрисовки вариантов
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      shownAt = performance.now();
+    });
+  });
+
+  return;
+}
  // ======= LETTER BUILDER: без подсказок и без показа правильного слова =======
   if (gameMode === "letter_builder") {
     clearTimers();
@@ -514,6 +515,7 @@ async function nextItem() {
 
     setToast("Выбери правильный вариант:");
     if (shouldHintChoose(idx)) await playVoice("choose");
+    resetOptionsUI();
     renderOptions(it);
     // фиксируем старт реакции после реальной отрисовки
     requestAnimationFrame(() => {
@@ -750,3 +752,17 @@ if (btnPlay) btnPlay.disabled = false;
   loadChildren().catch(() => {});
   resetUI();
 })();
+
+function resetOptionsUI() {
+  const optionsEl = $("options");
+  if (!optionsEl) return;
+
+  // убрать старые кнопки
+  optionsEl.innerHTML = "";
+
+  // убрать режимные классы (на случай, если их где-то добавляли)
+  optionsEl.classList.remove("lettersGrid");
+
+  // если у тебя есть скрытие через класс/атрибут — сбрось тут
+  optionsEl.classList.remove("hidden");
+}

@@ -729,6 +729,9 @@ async function finish() {
 
   setToast("Тренировка закончилась. Можно сыграть ещё раз.");
   renderResult(out);
+  if (out.new_achievements && out.new_achievements.length) {
+  showAchievements(out.new_achievements);
+}
   const emptyHint = document.getElementById("resultEmptyHint");
   if (emptyHint) emptyHint.style.display = "none";
   if (gameMode === "survival") {
@@ -764,4 +767,30 @@ function resetOptionsUI() {
 
   // если у тебя есть скрытие через класс/атрибут — сбрось тут
   optionsEl.classList.remove("hidden");
+}
+
+function showAchievements(list){
+  const wrap = document.createElement("div");
+  wrap.style.position = "fixed";
+  wrap.style.top = "20px";
+  wrap.style.right = "20px";
+  wrap.style.zIndex = "99999";
+
+  list.forEach(a => {
+    const el = document.createElement("div");
+    el.style.background = "rgba(10,10,20,.95)";
+    el.style.color = "#fff";
+    el.style.padding = "14px 18px";
+    el.style.borderRadius = "14px";
+    el.style.marginBottom = "10px";
+    el.style.boxShadow = "0 0 30px rgba(212,175,55,.35)";
+    el.innerHTML = `
+      <div style="font-size:22px">${a.icon} ${a.title}</div>
+      <div style="opacity:.8;font-size:14px">${a.description}</div>
+    `;
+    wrap.appendChild(el);
+  });
+
+  document.body.appendChild(wrap);
+  setTimeout(()=>wrap.remove(), 4500);
 }

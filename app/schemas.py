@@ -47,6 +47,7 @@ class SessionFinishOut(BaseModel):
     accuracy: float
     avg_reaction_ms: float
     next_exposure_ms: int
+    new_achievements: list[AchievementOut] = []
 
 class ChildStatsOut(BaseModel):
     child_id: int
@@ -70,3 +71,9 @@ class ChildStatsByModeOut(BaseModel):
 class AllChildrenStatsOut(BaseModel):
     total_children: int
     children: list[ChildStatsByModeOut]
+
+class AchievementOut(BaseModel):
+    code: str
+    title: str
+    description: str
+    icon: str

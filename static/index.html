@@ -930,6 +930,8 @@ a, label,
 
       <div style="margin-top:14px; font-weight:900;">По режимам</div>
       <div id="childModesTable" style="margin-top:10px; overflow:auto;"></div>
+      <div style="margin-top:16px; font-weight:900;">Достижения</div>
+      <div id="childAchievements" style="margin-top:10px;"></div>
     </div>
 
     <!-- ===== Вкладка: все игроки ===== -->
@@ -1141,6 +1143,57 @@ function renderChildModes(childData){
   `;
 }
 
+async function loadChildAchievements(childId){
+  const list = await (await fetch(`/api/children/${childId}/achievements`)).json();
+  renderChildAchievements(list);
+}
+
+function renderChildAchievements(list){
+  const wrap = document.getElementById("childAchievements");
+  if (!wrap) return;
+
+  if (!list || !list.length) {
+    wrap.innerHTML = `<div style="color:rgba(242,232,201,.7);font-weight:900;">Пока нет достижений.</div>`;
+    return;
+  }
+
+  const unlocked = list.filter(x => x.unlocked);
+  const locked = list.filter(x => !x.unlocked);
+
+  const makeCard = (a, isLocked) => `
+    <div style="
+      border:1px solid rgba(212,175,55,.22);
+      border-radius:14px;
+      padding:10px 12px;
+      background:rgba(0,0,0,.18);
+      opacity:${isLocked ? 0.45 : 1};
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    ">
+      <div style="font-size:22px; width:28px; text-align:center;">${a.icon || "🏆"}</div>
+      <div>
+        <div style="font-weight:900;">${a.title || a.code}</div>
+        <div style="color:rgba(242,232,201,.75); font-weight:800; font-size:13px; margin-top:2px;">
+          ${a.description || ""}
+        </div>
+      </div>
+    </div>
+  `;
+
+  wrap.innerHTML = `
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+      <div style="border:1px solid rgba(212,175,55,.22); border-radius:999px; padding:6px 10px; background:rgba(0,0,0,.18); font-weight:900;">
+        Получено: ${unlocked.length} / ${list.length}
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px;">
+      ${unlocked.map(a => makeCard(a, false)).join("")}
+      ${locked.map(a => makeCard(a, true)).join("")}
+    </div>
+  `;
+}
 function renderAllPlayers(allData){
   // allData: {total_children, children:[{child_name, modes:[...]}]}
   const subtitle = document.getElementById("statsSubtitle");
@@ -1209,6 +1262,7 @@ async function loadStatsChild(){
   const data = await (await fetch(`/api/stats/children/${childId}`)).json();
   if (!data.total_sessions) document.getElementById("statsEmpty").style.display = "block";
   renderChildModes(data);
+  await loadChildAchievements(childId);
 }
 
 // кнопки/табы

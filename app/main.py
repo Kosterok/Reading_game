@@ -2,8 +2,9 @@ from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from fastapi.responses import FileResponse
-
+from sqlalchemy import select, func
 
 from .db import Base, engine, get_db
 from . import models, schemas
@@ -18,8 +19,8 @@ from .content import (
 
 DIFF_PRESETS = {
     "easy":   {"exposure": 1500, "min": 1100, "max": 2000, "items": 6, "options": 3, "step": 120},
-    "normal": {"exposure": 1200, "min": 800,  "max": 1800, "items": 7, "options": 4, "step": 150},
-    "hard":   {"exposure": 900,  "min": 500,  "max": 1400, "items": 9, "options": 5, "step": 150},
+    "normal": {"exposure": 1200, "min": 800,  "max": 1800, "items": 8, "options": 4, "step": 150},
+    "hard":   {"exposure": 900,  "min": 500,  "max": 1400, "items": 10, "options": 5, "step": 150},
 }
 
 SURVIVAL_LIVES = {
@@ -38,7 +39,31 @@ def root():
     return FileResponse("static/index.html")
 # Создать таблицы (для MVP ок; позже — миграции Alembic)
 Base.metadata.create_all(bind=engine)
+def seed_achievements():
+    with next(get_db()) as db:
+        existing = db.query(models.Achievement).count()
+        if existing > 0:
+            return
 
+        rows = [
+            ("streak_5", "Серия 5", "5 правильных подряд", "🔥"),
+            ("perfect_game", "Идеально", "100% точность за игру", "🎯"),
+            ("fast_2000", "Молния", "Средняя реакция быстрее 2000 мс", "⚡"),
+            ("games_10", "Опытный", "Сыграно 10 игр", "🏆"),
+            ("words_100", "Читатель", "Прочитано 100 слов", "📘"),
+        ]
+
+        for code, title, desc, icon in rows:
+            db.add(models.Achievement(
+                code=code,
+                title=title,
+                description=desc,
+                icon=icon
+            ))
+
+        db.commit()
+
+seed_achievements()
 @app.get("/api/themes")
 def get_themes():
     return list_themes()
@@ -226,12 +251,94 @@ def finish_session(session_id: int, db: Session = Depends(get_db)):
         session.finished_at = datetime.utcnow()
         session.exposure_ms = next_exposure
         db.commit()
+    # ================= ACHIEVEMENTS =================
 
+    new_achievements = []
+
+    # считаем максимум серии
+    max_streak = 0
+    cur = 0
+    for a in attempts:
+        if a.correct:
+            cur += 1
+            max_streak = max(max_streak, cur)
+        else:
+            cur = 0
+
+    # всего завершённых игр
+    total_sessions = (
+        db.query(models.Session)
+        .filter(
+            models.Session.child_id == session.child_id,
+            models.Session.finished_at.isnot(None),
+        )
+        .count()
+    )
+
+    # всего слов (по attempts)
+    total_attempts = (
+        db.query(models.Attempt)
+        .join(models.Session)
+        .filter(models.Session.child_id == session.child_id)
+        .count()
+    )
+
+    def unlock(code: str):
+        ach = db.execute(
+            select(models.Achievement).where(models.Achievement.code == code)
+        ).scalar_one_or_none()
+        if not ach:
+            return
+
+        exists = db.execute(
+            select(models.ChildAchievement)
+            .where(
+                models.ChildAchievement.child_id == session.child_id,
+                models.ChildAchievement.achievement_id == ach.id,
+            )
+        ).scalar_one_or_none()
+
+        if exists:
+            return
+
+        db.add(models.ChildAchievement(
+            child_id=session.child_id,
+            achievement_id=ach.id
+        ))
+
+        new_achievements.append(
+            schemas.AchievementOut(
+                code=ach.code,
+                title=ach.title,
+                description=ach.description,
+                icon=ach.icon
+            )
+        )
+
+    # Условия
+    if max_streak >= 5:
+        unlock("streak_5")
+
+    if accuracy >= 1.0:
+        unlock("perfect_game")
+
+    if avg_reaction_ms < 2000 and total > 0:
+        unlock("fast_2000")
+
+    if total_sessions >= 10:
+        unlock("games_10")
+
+    if total_attempts >= 100:
+        unlock("words_100")
+
+    if new_achievements:
+        db.commit()
     return schemas.SessionFinishOut(
-        session_id=session.id,  # ← ДОБАВИТЬ
+        session_id=session.id,
         accuracy=accuracy,
         avg_reaction_ms=avg_reaction_ms,
         next_exposure_ms=int(next_exposure),
+        new_achievements=new_achievements
     )
 
 def _calc_child_stats_by_mode(child: models.Child, db: Session) -> schemas.ChildStatsByModeOut:
@@ -358,3 +465,30 @@ def get_all_children_stats(db: Session = Depends(get_db)):
         total_children=len(children),
         children=out,
     )
+@app.get("/api/children/{child_id}/achievements")
+def get_child_achievements(child_id: int, db: Session = Depends(get_db)):
+    child = db.get(models.Child, child_id)
+    if not child:
+        raise HTTPException(404, "Child not found")
+
+    # все достижения
+    all_achs = db.query(models.Achievement).order_by(models.Achievement.id.asc()).all()
+
+    # какие открыты у ребёнка
+    unlocked_rows = (
+        db.query(models.ChildAchievement.achievement_id)
+        .filter(models.ChildAchievement.child_id == child_id)
+        .all()
+    )
+    unlocked_ids = {x[0] for x in unlocked_rows}
+
+    return [
+        {
+            "code": a.code,
+            "title": a.title,
+            "description": a.description,
+            "icon": a.icon,
+            "unlocked": (a.id in unlocked_ids),
+        }
+        for a in all_achs
+    ]

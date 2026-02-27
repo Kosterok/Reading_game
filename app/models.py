@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Float
+from sqlalchemy import String, Integer, DateTime, ForeignKey, Float, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .db import Base
 
@@ -39,3 +39,33 @@ class Attempt(Base):
     shown_ms: Mapped[int] = mapped_column(Integer, nullable=False)    # сколько показывали стимул
 
     session: Mapped["Session"] = relationship(back_populates="attempts")
+
+# ================== ACHIEVEMENTS ==================
+
+class Achievement(Base):
+    __tablename__ = "achievements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str] = mapped_column(String(256), nullable=False)
+    icon: Mapped[str] = mapped_column(String(16), nullable=False)
+
+
+class ChildAchievement(Base):
+    __tablename__ = "child_achievements"
+
+    child_id: Mapped[int] = mapped_column(
+        ForeignKey("children.id", ondelete="CASCADE"),
+        primary_key=True
+    )
+    achievement_id: Mapped[int] = mapped_column(
+        ForeignKey("achievements.id", ondelete="CASCADE"),
+        primary_key=True
+    )
+
+    unlocked_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )

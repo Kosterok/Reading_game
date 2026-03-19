@@ -49,17 +49,20 @@ body::before{
 }
 
 .wrap{
-  max-width: none;           /* было: 1000px/980px */
-  width: 100%;
-  margin: 0;
-  padding: 24px 24px 44px;   /* можно 16/24 по вкусу */
+  width:100%;
+  min-height:100dvh;
+  margin:0;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
 }
 
 header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:24px;
+  margin-bottom:16px;
+  flex:0 0 auto;
 }
 h1{
   font-family:"Cinzel",serif;
@@ -119,9 +122,20 @@ h1{
   border-color:var(--gold);
 }
 
+
+
 .hidden{display:none}
-.screen{display:none}
-.screen.active{display:block}
+.screen{
+  display:none;
+  flex:1 1 auto;
+  min-height:0;
+}
+
+.screen.active{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
 
 .games{
   gap:16px;
@@ -459,7 +473,7 @@ select option{
 /* ===== ФОНЫ ЭКРАНОВ ===== */
 
 .screen{
-  min-height:100vh;
+  min-height:100dvh;
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
@@ -480,16 +494,21 @@ h1, .sub, .pill, .toast, .opt, .btn{
    ФОН НАЧИНАЕТСЯ С САМОГО ВЕРХА
    ============================= */
 
-body{
+html, body{
   margin:0;
+  padding:0;
+  overflow-x:hidden;
+}
+
+body{
   font-family:"Nunito",sans-serif;
   color:var(--text);
-  min-height:100vh;
-
+  min-height:100dvh;
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
   background-attachment:fixed;
+  overflow-y:auto;
 }
 
 /* фон по экранам (класс ставим на body через JS) */
@@ -565,20 +584,56 @@ a, label,
 
 .cselect__list{
   position:absolute;
-  left:0; right:0;
-  margin-top:8px;
-  border-radius: 14px;
-  border: 1px solid rgba(212,175,55,.28);
-  background: rgba(10,12,20,.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 22px 48px rgba(0,0,0,.55);
-  overflow:hidden;
-  z-index: 10000;
+  top:calc(100% + 8px);
+  left:0;
+  right:0;
+  z-index:2000;
+
   display:none;
+  max-height:340px;
+  overflow-y:auto;
+  overflow-x:hidden;
+
+  border:1px solid rgba(212,175,55,.28);
+  border-radius:18px;
+  background:rgba(7,8,18,.96);
+  box-shadow:0 18px 40px rgba(0,0,0,.42);
+  padding:8px;
+
+  scrollbar-width:thin;                    /* Firefox */
+  scrollbar-color:rgba(212,175,55,.65) rgba(255,255,255,.05);
 }
 
-.cselect.open .cselect__list{ display:block; }
+.cselect__list::-webkit-scrollbar{
+  width:10px;
+}
+
+.cselect__list::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.04);
+  border-radius:999px;
+}
+
+.cselect__list::-webkit-scrollbar-thumb{
+  background:linear-gradient(
+    180deg,
+    rgba(212,175,55,.88),
+    rgba(176,132,24,.92)
+  );
+  border-radius:999px;
+  border:2px solid rgba(7,8,18,.96);
+}
+
+.cselect__list::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(
+    180deg,
+    rgba(232,196,79,.95),
+    rgba(186,140,28,.98)
+  );
+}
+
+.cselect.open .cselect__list{
+  display:block;
+}
 
 .cselect__opt{
   padding: 12px 14px;
@@ -674,6 +729,106 @@ a, label,
   box-shadow: 0 10px 26px rgba(0,0,0,.35);
 
   text-align: center;
+}.reveal-letter{
+  display:inline-block;
+  animation: revealPop .45s ease;
+  color: var(--gold);
+  text-shadow:
+    0 0 10px rgba(212,175,55,.35),
+    0 0 20px rgba(212,175,55,.18);
+}
+
+@keyframes revealPop{
+  0%{
+    opacity:0;
+    transform: translateY(10px) scale(.7);
+    filter: blur(4px);
+  }
+  60%{
+    opacity:1;
+    transform: translateY(-2px) scale(1.08);
+    filter: blur(0);
+  }
+  100%{
+    opacity:1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+#word.revealWord,
+#word.revealWordBad{
+  transition: transform .18s ease, filter .18s ease;
+}
+
+#word.revealWord{
+  transform: scale(1.03);
+}
+
+#word.revealWordBad{
+  transform: scale(1.03);
+  filter: brightness(1.08);
+}
+  .reveal-letter{
+  display:inline-block;
+  min-width: .6em;
+  text-align:center;
+  font-weight: 900;
+}
+
+.reveal-letter.reveal-good{
+  color: var(--gold);
+  text-shadow:
+    0 0 10px rgba(212,175,55,.35),
+    0 0 22px rgba(212,175,55,.18);
+  animation: revealGood .42s ease;
+}
+
+.reveal-letter.reveal-bad{
+  color: #ff6b6b;
+  text-shadow:
+    0 0 10px rgba(239,68,68,.28),
+    0 0 18px rgba(239,68,68,.14);
+  animation: revealBad .22s ease;
+}
+
+#word.revealWordGood{
+  transform: scale(1.03);
+  transition: transform .18s ease;
+}
+
+#word.revealWordBad{
+  transform: scale(1.02);
+  transition: transform .14s ease;
+}
+
+@keyframes revealGood{
+  0%{
+    opacity:0;
+    transform: translateY(10px) scale(.72);
+    filter: blur(4px);
+  }
+  60%{
+    opacity:1;
+    transform: translateY(-2px) scale(1.1);
+    filter: blur(0);
+  }
+  100%{
+    opacity:1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes revealBad{
+  0%{
+    opacity:0;
+    transform: scale(.8);
+  }
+  100%{
+    opacity:1;
+    transform: scale(1);
+  }
 }
 </style>
 </head>
@@ -716,6 +871,12 @@ a, label,
   🔮 Алхимия Слова
   <div style="font-size:13px;color:var(--muted);margin-top:6px">
     Соедини разрозненные буквы в цельное заклинание.
+  </div>
+</div>
+      <div class="gameCard" id="pickVocabSpell">
+  📘 Словарный Сундук
+  <div style="font-size:13px;color:var(--muted);margin-top:6px">
+    Словарные слова по категориям. Вставляй пропущенную букву и закрепляй сложные написания.
   </div>
 </div>
       <div class="gameCard" id="btnStats">
@@ -791,7 +952,6 @@ a, label,
     <div class="cselect" data-for="themeSelect">
       <select id="themeSelect"></select>
       <button type="button" class="cselect__btn"></button>
-      <div class="cselect__list" role="listbox"></div>
       <div class="cselect__list" role="listbox"></div>
     </div>
 
@@ -964,6 +1124,73 @@ const sSetup = document.getElementById("screen-setup");
 const sPlay  = document.getElementById("screen-play");
 const sRes   = document.getElementById("screen-result");
 
+function isVocabThemeId(id){
+  return Number(id) >= 101;
+}
+
+function modeAllowsTheme(mode, themeId){
+  const id = Number(themeId);
+  if (mode === "vocab_spell") return isVocabThemeId(id);
+  return !isVocabThemeId(id);
+}
+
+function rebuildCustomSelectById(selectId){
+  const wrapper = document.querySelector(`.cselect[data-for="${selectId}"]`);
+  const select = document.getElementById(selectId);
+  if (!wrapper || !select) return;
+
+  const btn = wrapper.querySelector(".cselect__btn");
+  const list = wrapper.querySelector(".cselect__list");
+  if (!btn || !list) return;
+
+  const visibleOptions = [...select.options].filter(opt => !opt.hidden);
+
+  list.innerHTML = "";
+
+  visibleOptions.forEach(opt => {
+    const div = document.createElement("div");
+    div.className = "cselect__opt";
+    div.textContent = opt.textContent;
+    div.setAttribute("role", "option");
+    div.setAttribute("aria-selected", opt.selected ? "true" : "false");
+
+    div.addEventListener("click", () => {
+      select.value = opt.value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      wrapper.classList.remove("open");
+      rebuildCustomSelectById(selectId);
+    });
+
+    list.appendChild(div);
+  });
+
+  const current = select.options[select.selectedIndex];
+  btn.textContent = current ? current.textContent : "";
+}
+window.rebuildCustomSelectById = rebuildCustomSelectById;
+
+function filterThemesByMode(mode){
+  const sel = document.getElementById("themeSelect");
+  if (!sel) return;
+
+  const options = [...sel.options];
+
+  options.forEach(opt => {
+    const allowed = modeAllowsTheme(mode, opt.value);
+    opt.hidden = !allowed;
+  });
+
+  const current = options.find(opt => opt.value === sel.value && !opt.hidden);
+  if (!current) {
+    const firstAllowed = options.find(opt => !opt.hidden);
+    if (firstAllowed) sel.value = firstAllowed.value;
+  }
+
+  sel.dispatchEvent(new Event("change", { bubbles: true }));
+  rebuildCustomSelectById("themeSelect");
+}
+window.filterThemesByMode = filterThemesByMode;
+
 function show(screen){
   const sStats = document.getElementById("screen-stats");
 const sSettings = document.getElementById("screen-settings");
@@ -982,25 +1209,24 @@ const sSettings = document.getElementById("screen-settings");
 
 // Навигация
 window.rg_selected_mode = "word_flash";
-document.getElementById("pickWordFlash").onclick = () => {
-  window.rg_selected_mode = "word_flash";
-  show("setup");
-};
 
-document.getElementById("pickSurvival").onclick = () => {
-  window.rg_selected_mode = "survival";
+function pickMode(mode){
+  window.rg_selected_mode = mode;
+  filterThemesByMode(mode);
   show("setup");
-};
+}
 
-document.getElementById("pickOddOneOut").onclick = () => {
-  window.rg_selected_mode = "odd_one_out";
-  show("setup");
-};
+document.getElementById("pickWordFlash").onclick = () => pickMode("word_flash");
+document.getElementById("pickSurvival").onclick = () => pickMode("survival");
+document.getElementById("pickOddOneOut").onclick = () => pickMode("odd_one_out");
+document.getElementById("pickLetterBuilder").onclick = () => pickMode("letter_builder");
+document.getElementById("pickVocabSpell").onclick = () => pickMode("vocab_spell");
 
-document.getElementById("pickLetterBuilder").onclick = () => {
-  window.rg_selected_mode = "letter_builder";
-  show("setup");
-};
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    filterThemesByMode(window.rg_selected_mode || "word_flash");
+  }, 0);
+});
 
 document.getElementById("btnStats").onclick = async () => {
   const sel = document.getElementById("childSelect");
@@ -1062,8 +1288,10 @@ const MODE_TITLES = {
   word_flash: "⚡ Искра Разума",
   survival: "🛡️ Страж Знаний",
   odd_one_out: "🔎 Тень Лишнего",
-  letter_builder: "🔮 Алхимия Слова"
+  letter_builder: "🔮 Алхимия Слова",
+  vocab_spell: "📘 Словарный Сундук"
 };
+
 
 function fmtPct01(x){
   const v = Number(x || 0);

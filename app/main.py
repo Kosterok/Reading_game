@@ -13,7 +13,8 @@ from .content import (
     make_word_flash_items,
     make_odd_one_out_items,
     make_letter_builder_items,
-    list_themes,
+    make_vocab_spell_items,
+    list_all_categories,
     DEFAULT_THEME_ID,
 )
 
@@ -66,7 +67,7 @@ def seed_achievements():
 seed_achievements()
 @app.get("/api/themes")
 def get_themes():
-    return list_themes()
+    return list_all_categories()
 
 @app.post("/api/children", response_model=schemas.ChildOut)
 def create_child(payload: schemas.ChildCreate, db: Session = Depends(get_db)):
@@ -136,6 +137,12 @@ def start_session(payload: schemas.SessionStartIn, db: Session = Depends(get_db)
         )
     elif payload.mode == "letter_builder":
         items = make_letter_builder_items(
+            items_total,
+            difficulty=payload.difficulty,
+            theme_id=theme_id,
+        )
+    elif payload.mode == "vocab_spell":
+        items = make_vocab_spell_items(
             items_total,
             difficulty=payload.difficulty,
             theme_id=theme_id,
@@ -385,7 +392,13 @@ def _calc_child_stats_by_mode(child: models.Child, db: Session) -> schemas.Child
         )
 
     # стабильный порядок
-    order = {"word_flash": 0, "survival": 1, "odd_one_out": 2, "letter_builder": 3}
+    order = {
+        "word_flash": 0,
+        "survival": 1,
+        "odd_one_out": 2,
+        "letter_builder": 3,
+        "vocab_spell": 4,
+    }
     modes_out.sort(key=lambda x: order.get(x.mode, 99))
 
     return schemas.ChildStatsByModeOut(

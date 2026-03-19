@@ -32,8 +32,9 @@ function lbReset() {
 }
 
 function choosePromptForMode(mode) {
-  if (mode === "letter_builder") return "";          // без подсказок
+  if (mode === "letter_builder") return "";
   if (mode === "odd_one_out") return "Выбери лишнее слово:";
+  if (mode === "vocab_spell") return "Вставь пропущенную букву:";
   return "Выбери правильный вариант:";
 }
 
@@ -52,8 +53,14 @@ async function loadThemes(){
   });
 
   // дефолт
-  const saved = localStorage.getItem("rg_theme_id");
+const saved = localStorage.getItem("rg_theme_id");
   if (saved) sel.value = saved;
+
+  sel.dispatchEvent(new Event("change", { bubbles: true }));
+
+  if (typeof window.filterThemesByMode === "function") {
+    window.filterThemesByMode(window.rg_selected_mode || "word_flash");
+  }
 }
 
 // ===================== API =====================
@@ -392,9 +399,6 @@ idx = 0;
     const sr = document.getElementById("survivalResult");
     if (sr) sr.style.display = "none";
   }
-  items = data.items;
-  idx = 0;
-  gameMode = data.mode || "word_flash";
 
   renderLives();
   const sInfo = $("sessionInfo");
@@ -477,6 +481,31 @@ if (gameMode === "odd_one_out") {
 
     return;
   }
+
+ // ======= VOCAB SPELL: слово с пропуском + варианты букв =======
+if (gameMode === "vocab_spell") {
+  clearTimers();
+  setRingVisible(false);
+
+  if (wordEl) {
+    wordEl.textContent = (it.prompt ?? "");
+    wordEl.classList.remove("hidden");
+  }
+
+  setToast(choosePromptForMode(gameMode));
+
+  if (shouldHintChoose(idx)) await playVoice("choose");
+
+  renderOptions(it);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      shownAt = performance.now();
+    });
+  });
+
+  return;
+}
   // ======= Обычные режимы (word_flash / survival) =======
   setToast("Смотри на слово…");
 
@@ -512,7 +541,7 @@ if (gameMode === "odd_one_out") {
     if (wordEl) wordEl.classList.add("hidden");
     setRingVisible(false);
 
-    setToast("Выбери правильный вариант:");
+    setToast(choosePromptForMode(gameMode));
     if (shouldHintChoose(idx)) await playVoice("choose");
     resetOptionsUI();
     renderOptions(it);
@@ -639,15 +668,18 @@ if (gameMode === "survival") {
     return finish();
   }
 }
-  // Feedback
+ // Feedback
   setPill(correct ? "Верно" : "Почти");
   setToast(`${correct ? "Правильно" : "Почти"} • ${reaction} мс`);
 
-  // Voice feedback (do not interrupt if hint is still speaking)
+  // Voice feedback
   await playVoice(correct ? "good" : "almost");
 
-  // Optional sfx (if you add it)
-  // if (correct) playSfx("ding");
+  // Для словарного режима показываем:
+  // неверную букву -> правильную букву
+  if (gameMode === "vocab_spell") {
+    await animateVocabReveal(it, chosen, correct);
+  }
 
   idx += 1;
   setProgress((idx / items.length) * 100);
@@ -655,7 +687,7 @@ if (gameMode === "survival") {
   setTimeout(() => {
     setPill("Играй");
     nextItem();
-  }, 450);
+  }, gameMode === "vocab_spell" ? 420 : 450);
 }
 
 function starsFromAccuracy(acc) {
@@ -767,6 +799,96 @@ function resetOptionsUI() {
 
   // если у тебя есть скрытие через класс/атрибут — сбрось тут
   optionsEl.classList.remove("hidden");
+}
+
+async function animateVocabReveal(item, chosen, isCorrect) {
+  const wordEl = $("word");
+  if (!wordEl) return;
+
+  const masked = item.prompt ?? "";
+  const right = item.correct ?? "";
+  const missIdx = masked.indexOf("_");
+
+  if (missIdx < 0 || !right) {
+    wordEl.textContent = masked;
+    return;
+  }
+
+  const before = masked.slice(0, missIdx);
+  const after = masked.slice(missIdx + 1);
+
+  const renderState = (letter, cls) => {
+    wordEl.innerHTML = `
+      <span>${before}</span><span class="reveal-letter ${cls}">${letter}</span><span>${after}</span>
+    `;
+  };
+
+  // Сброс состояний
+  wordEl.classList.remove("revealWord", "revealWordBad", "revealWordGood");
+
+  if (isCorrect) {
+    renderState(right, "reveal-good");
+    wordEl.classList.add("revealWordGood");
+    await new Promise(resolve => setTimeout(resolve, 550));
+  } else {
+    // 1. Показываем выбранную букву красным
+    renderState(chosen, "reveal-bad");
+    wordEl.classList.add("revealWordBad");
+    await new Promise(resolve => setTimeout(resolve, 320));
+
+    // 2. Меняем на правильную букву золотым
+    wordEl.classList.remove("revealWordBad");
+    renderState(right, "reveal-good");
+    wordEl.classList.add("revealWordGood");
+    await new Promise(resolve => setTimeout(resolve, 520));
+  }
+
+  // 3. Фиксируем итоговое слово обычным текстом
+  const fullWord = before + right + after;
+  wordEl.textContent = fullWord;
+  wordEl.classList.remove("revealWord", "revealWordBad", "revealWordGood");
+}
+
+function revealVocabWord(item, chosen, correct) {
+  const wordEl = $("word");
+  if (!wordEl) return Promise.resolve();
+
+  const masked = item.prompt ?? "";
+  const right = item.correct ?? "";
+  const missIdx = masked.indexOf("_");
+
+  if (missIdx < 0 || !right) {
+    wordEl.textContent = masked;
+    return Promise.resolve();
+  }
+
+  const fullWord = masked.slice(0, missIdx) + right + masked.slice(missIdx + 1);
+
+  // Сбрасываем предыдущее состояние
+  wordEl.classList.remove("revealWord", "revealWordBad");
+
+  // Рисуем слово так, чтобы новая буква была отдельным span
+  const before = masked.slice(0, missIdx);
+  const after = masked.slice(missIdx + 1);
+
+  wordEl.innerHTML = `
+    <span>${before}</span><span class="reveal-letter">${right}</span><span>${after}</span>
+  `;
+
+  // Если ответ был неверный — можно слегка выделить раскрытие
+  if (!correct) {
+    wordEl.classList.add("revealWordBad");
+  } else {
+    wordEl.classList.add("revealWord");
+  }
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      wordEl.textContent = fullWord;
+      wordEl.classList.remove("revealWord", "revealWordBad");
+      resolve();
+    }, 550);
+  });
 }
 
 function showAchievements(list){

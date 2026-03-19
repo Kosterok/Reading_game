@@ -170,7 +170,7 @@ THEMES = {
             "результативность","профессиональный","олимпийский",
             "квалификация","регламент","дисциплина","рекордсмен",
             "подготовительный","интенсивность","тактический",
-            "стратегический","спортивный","физическаяформа",
+            "стратегический","спортивный",
             "координация","мобилизация","мотивация","концентрация"
         ],
     },
@@ -205,7 +205,7 @@ THEMES = {
         "easy": [
             "дом","крыша","стена","пол","дверь","лампа","ковёр",
             "диван","шкаф","кухня","ванна","чашка",
-            "ложка","вилка","кран","печь","замок","окнорама","подвал","чердак"
+            "ложка","вилка","кран","печь","замок","окно","рама","подвал","чердак"
         ],
         "normal": [
             "квартира","балкон","прихожая","гостиная",
@@ -225,43 +225,293 @@ THEMES = {
     },
 
     10: {
-        "name": "Музыка",
+        "name": "Тёма",
         "easy": [
-            "песня","звук","ритм","нота","хор","бас",
-            "флейта","труба","барабан","скрипка",
-            "гитара","аккорд","микрофон","сцена",
-            "зал","певец","дирижёр","танец","пауза","мелодия"
-        ],
-        "normal": [
-            "оркестр","концерт","композиция","исполнение",
-            "репетиция","музыкант","инструмент",
-            "аудиозапись","партитура","солист",
-            "ансамбль","гармония","альбом","премьера",
-            "фонограмма","акустика","аранжировка",
-            "творчество","аплодисменты","клавиши"
-        ],
-        "hard": [
-            "импровизация","интерпретация","виртуозность",
-            "музыкальный","классический","симфонический",
-            "тональность","динамический","экспрессия",
-            "профессиональный","художественный",
-            "исполнительский","консерватория",
-            "композиторский","инструментальный",
-            "вокализация","музыковедение","аранжировочный",
-            "гармонический","многоголосие"
+            "скебоб","крипер","амонгус","Стив","Алекс","липтон","наггетсы","картошка фри","майнкрафт"
         ],
     },
 }
 
 DEFAULT_THEME_ID = 1
 
+VOCAB_CATEGORIES = {
+101: {
+    "name": "1 класс — словарные слова",
+    "easy": [
+        {"word": "молоко", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "корова", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "собака", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "ворона", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "пенал", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "ребята", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "берёза", "missing_index": 3, "options": ["ё", "е"]},
+        {"word": "тетрадь", "missing_index": 1, "options": ["е", "и"]},
+    ],
+    "normal": [
+        {"word": "лопата", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "посуда", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "воробей", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "девочка", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "машина", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "пальто", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "карман", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "народ", "missing_index": 1, "options": ["а", "о"]},
+    ],
+    "hard": [
+        {"word": "ученик", "missing_index": 2, "options": ["е", "и"]},
+        {"word": "учитель", "missing_index": 2, "options": ["и", "е"]},
+        {"word": "дежурный", "missing_index": 3, "options": ["у", "ю"]},
+        {"word": "комната", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "картина", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "лестница", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "карандаш", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "директор", "missing_index": 1, "options": ["и", "е"]},
+    ],
+},
+
+102: {
+    "name": "2 класс — словарные слова",
+    "easy": [
+        {"word": "капуста", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "коньки", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "магазин", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "малина", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "мебель", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "медведь", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "месяц", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "погода", "missing_index": 1, "options": ["о", "а"]},
+    ],
+    "normal": [
+        {"word": "помидор", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "работа", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "рисунок", "missing_index": 1, "options": ["и", "е"]},
+        {"word": "родина", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "сапоги", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "сорока", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "тарелка", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "товарищ", "missing_index": 1, "options": ["о", "а"]},
+    ],
+    "hard": [
+        {"word": "хорошо", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "ягода", "missing_index": 2, "options": ["о", "а"]},
+        {"word": "завод", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "морковь", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "календарь", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "ботинки", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "каникулы", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "квартира", "missing_index": 2, "options": ["а", "о"]},
+    ],
+},
+
+103: {
+    "name": "3 класс — словарные слова",
+    "easy": [
+        {"word": "беседа", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "библиотека", "missing_index": 1, "options": ["и", "е"]},
+        {"word": "болото", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "газета", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "герой", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "горизонт", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "железо", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "километр", "missing_index": 1, "options": ["и", "е"]},
+    ],
+    "normal": [
+        {"word": "коллекция", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "командир", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "космонавт", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "математика", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "победа", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "секунда", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "солдат", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "телефон", "missing_index": 1, "options": ["е", "и"]},
+    ],
+    "hard": [
+        {"word": "тепловоз", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "трактор", "missing_index": 2, "options": ["а", "о"]},
+        {"word": "столица", "missing_index": 2, "options": ["о", "а"]},
+        {"word": "путешествие", "missing_index": 1, "options": ["у", "ю"]},
+        {"word": "инженер", "missing_index": 0, "options": ["и", "е"]},
+        {"word": "интерес", "missing_index": 0, "options": ["и", "е"]},
+        {"word": "расстояние", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "велосипед", "missing_index": 3, "options": ["о", "а"]},
+    ],
+},
+
+104: {
+    "name": "4 класс — словарные слова",
+    "easy": [
+        {"word": "агроном", "missing_index": 0, "options": ["а", "о"]},
+        {"word": "адрес", "missing_index": 0, "options": ["а", "о"]},
+        {"word": "аккуратно", "missing_index": 3, "options": ["у", "о"]},
+        {"word": "аппетит", "missing_index": 3, "options": ["е", "и"]},
+        {"word": "корабль", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "костюм", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "пассажир", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "портрет", "missing_index": 1, "options": ["о", "а"]},
+    ],
+    "normal": [
+        {"word": "салют", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "хоккей", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "биография", "missing_index": 1, "options": ["и", "е"]},
+        {"word": "диалог", "missing_index": 1, "options": ["и", "е"]},
+        {"word": "интонация", "missing_index": 0, "options": ["и", "е"]},
+        {"word": "каллиграфия", "missing_index": 1, "options": ["а", "о"]},
+        {"word": "литература", "missing_index": 1, "options": ["и", "е"]},
+        {"word": "территория", "missing_index": 1, "options": ["е", "и"]},
+    ],
+    "hard": [
+        {"word": "дисциплина", "missing_index": 1, "options": ["и", "е"]},
+        {"word": "искусство", "missing_index": 3, "options": ["у", "ю"]},
+        {"word": "количество", "missing_index": 1, "options": ["о", "а"]},
+        {"word": "микроскоп", "missing_index": 1, "options": ["и", "е"]},
+        {"word": "температура", "missing_index": 1, "options": ["е", "и"]},
+        {"word": "экскаватор", "missing_index": 4, "options": ["а", "о"]},
+        {"word": "эксперимент", "missing_index": 4, "options": ["е", "и"]},
+        {"word": "путешественник", "missing_index": 1, "options": ["у", "ю"]},
+    ],
+    },
+
+    201: {
+        "name": "ЖИ-ШИ",
+        "easy": [
+            {"word": "ежи", "missing_index": 2, "options": ["и", "ы"]},
+            {"word": "ужи", "missing_index": 2, "options": ["и", "ы"]},
+            {"word": "ножи", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "лыжи", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "шило", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "шина", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "машина", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "шишка", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "пиши", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "живи", "missing_index": 1, "options": ["и", "ы"]},
+        ],
+        "normal": [
+            {"word": "жираф", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "жизнь", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "пружина", "missing_index": 5, "options": ["и", "ы"]},
+            {"word": "тишина", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "лужи", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "решить", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "живой", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "шипы", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "ошибка", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "чижик", "missing_index": 2, "options": ["и", "ы"]},
+        ],
+        "hard": [
+            {"word": "живопись", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "ширина", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "служить", "missing_index": 4, "options": ["и", "ы"]},
+            {"word": "пружинка", "missing_index": 5, "options": ["и", "ы"]},
+            {"word": "животное", "missing_index": 1, "options": ["и", "ы"]},
+            {"word": "решительный", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "поспешить", "missing_index": 6, "options": ["и", "ы"]},
+            {"word": "зашипеть", "missing_index": 3, "options": ["и", "ы"]},
+            {"word": "дружить", "missing_index": 4, "options": ["и", "ы"]},
+            {"word": "напиши", "missing_index": 5, "options": ["и", "ы"]},
+        ],
+    },
+
+    202: {
+        "name": "ЧА-ЩА",
+        "easy": [
+            {"word": "чашка", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "чаща", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "чайка", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "роща", "missing_index": 3, "options": ["а", "я"]},
+            {"word": "свеча", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "туча", "missing_index": 3, "options": ["а", "я"]},
+            {"word": "дача", "missing_index": 3, "options": ["а", "я"]},
+            {"word": "качать", "missing_index": 2, "options": ["а", "я"]},
+            {"word": "чай", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "пища", "missing_index": 3, "options": ["а", "я"]},
+        ],
+        "normal": [
+            {"word": "начало", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "печать", "missing_index": 3, "options": ["а", "я"]},
+            {"word": "прощай", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "обещание", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "площадка", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "часто", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "участок", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "чайник", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "частица", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "обращаться", "missing_index": 4, "options": ["а", "я"]},
+        ],
+        "hard": [
+            {"word": "прощание", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "смущаться", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "ощущать", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "возвращаться", "missing_index": 6, "options": ["а", "я"]},
+            {"word": "замечательный", "missing_index": 3, "options": ["а", "я"]},
+            {"word": "обучающий", "missing_index": 3, "options": ["а", "я"]},
+            {"word": "чаепитие", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "разочарование", "missing_index": 4, "options": ["а", "я"]},
+            {"word": "нечаянно", "missing_index": 1, "options": ["а", "я"]},
+            {"word": "участвовать", "missing_index": 1, "options": ["а", "я"]},
+        ],
+    },
+
+    203: {
+        "name": "ЧУ-ЩУ",
+        "easy": [
+            {"word": "чудо", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "щука", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "чулок", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "чугун", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "щуп", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "ищу", "missing_index": 2, "options": ["у", "ю"]},
+            {"word": "тащу", "missing_index": 3, "options": ["у", "ю"]},
+            {"word": "молчу", "missing_index": 4, "options": ["у", "ю"]},
+            {"word": "хочу", "missing_index": 2, "options": ["у", "ю"]},
+            {"word": "чуть", "missing_index": 1, "options": ["у", "ю"]},
+        ],
+        "normal": [
+            {"word": "чужой", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "щуплый", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "чудесный", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "прощу", "missing_index": 4, "options": ["у", "ю"]},
+            {"word": "чудак", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "щуриться", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "учу", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "чудовище", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "щукач", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "чугунный", "missing_index": 1, "options": ["у", "ю"]},
+        ],
+        "hard": [
+            {"word": "чувство", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "щурёнок", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "щупальце", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "предчувствие", "missing_index": 5, "options": ["у", "ю"]},
+            {"word": "почудилось", "missing_index": 2, "options": ["у", "ю"]},
+            {"word": "прищуриться", "missing_index": 4, "options": ["у", "ю"]},
+            {"word": "чудаковатый", "missing_index": 1, "options": ["у", "ю"]},
+            {"word": "разыщу", "missing_index": 4, "options": ["у", "ю"]},
+            {"word": "отыщу", "missing_index": 4, "options": ["у", "ю"]},
+            {"word": "почуять", "missing_index": 2, "options": ["у", "ю"]},
+        ],
+    },
+}
+
+def list_all_categories():
+    base = list_themes()
+    vocab = [{"id": tid, "name": f"📘 {t['name']}"} for tid, t in sorted(VOCAB_CATEGORIES.items())]
+    return base + vocab
+
 def list_themes():
     return [{"id": tid, "name": t["name"]} for tid, t in sorted(THEMES.items())]
 
-def _pool_for(theme_id: int, difficulty: str) -> list[str]:
-    theme = THEMES.get(theme_id) or THEMES[DEFAULT_THEME_ID]
-    words = theme.get(difficulty) or theme["normal"]
-    return words
+def _pool_for(theme_id, difficulty):
+    theme = THEMES[theme_id]
+
+    words = (
+        theme.get(difficulty)
+        or theme.get("normal")
+        or theme.get("easy")
+        or theme.get("hard")
+        or []
+    )
+
+    return list(words)
 
 def make_word_flash_items(n: int, difficulty: str, theme_id: int, options_k: int = 4) -> list[WordFlashItem]:
     words = _pool_for(theme_id, difficulty)
@@ -362,3 +612,50 @@ def make_letter_builder_items(n: int, difficulty: str, theme_id: int) -> list[Wo
             )
         )
     return items
+
+def _vocab_pool_for(theme_id: int, difficulty: str) -> list[dict]:
+    theme = VOCAB_CATEGORIES.get(theme_id)
+    if not theme:
+        return []
+    return theme.get(difficulty) or theme.get("normal") or []
+
+def make_vocab_spell_items(n: int, difficulty: str, theme_id: int) -> list[WordFlashItem]:
+    """
+    vocab_spell:
+    - prompt = слово с пропущенной буквой, например: вел_сипед
+    - options = варианты буквы
+    - target = НЕ показываем
+    - correct = правильная буква
+    """
+    rows = _vocab_pool_for(theme_id, difficulty)
+    if not rows:
+        return make_word_flash_items(n, difficulty, DEFAULT_THEME_ID, options_k=4)
+
+    pool = rows[:]
+    random.shuffle(pool)
+
+    if len(pool) >= n:
+        pool = pool[:n]
+
+    items: list[WordFlashItem] = []
+    for i in range(n):
+        row = pool[i % len(pool)]
+        word = row["word"]
+        miss_idx = row["missing_index"]
+        correct = word[miss_idx]
+        options = list(dict.fromkeys([correct] + row["options"]))
+        random.shuffle(options)
+
+        masked = word[:miss_idx] + "_" + word[miss_idx + 1:]
+
+        items.append(
+            WordFlashItem(
+                item_id=f"vs_t{theme_id}_{difficulty}_{i}",
+                target="",           # слово заранее не показываем
+                options=options,     # варианты букв
+                prompt=masked,       # показываем слово с пропуском
+                correct=correct,     # правильная буква
+            )
+        )
+    return items
+

@@ -55,6 +55,12 @@ class AttemptIn(BaseModel):
     reaction_ms: int
     shown_ms: int
 
+class AchievementOut(BaseModel):
+    code: str
+    title: str
+    description: str
+    icon: str
+
 class SessionFinishOut(BaseModel):
     session_id: int
     accuracy: float
@@ -84,9 +90,3 @@ class ChildStatsByModeOut(BaseModel):
 class AllChildrenStatsOut(BaseModel):
     total_children: int
     children: list[ChildStatsByModeOut]
-
-class AchievementOut(BaseModel):
-    code: str
-    title: str
-    description: str
-    icon: str

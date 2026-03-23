@@ -8,13 +8,14 @@ from sqlalchemy import select, func
 
 from .db import Base, engine, get_db
 from . import models, schemas
-from .content import make_word_flash_items
 from .content import (
     make_word_flash_items,
     make_odd_one_out_items,
     make_letter_builder_items,
     make_vocab_spell_items,
+    make_time_circle_items,
     list_all_categories,
+    list_time_circle_topics,
     DEFAULT_THEME_ID,
 )
 
@@ -68,6 +69,10 @@ seed_achievements()
 @app.get("/api/themes")
 def get_themes():
     return list_all_categories()
+
+@app.get("/api/time-topics")
+def get_time_topics():
+    return list_time_circle_topics()
 
 @app.post("/api/children", response_model=schemas.ChildOut)
 def create_child(payload: schemas.ChildCreate, db: Session = Depends(get_db)):
@@ -127,6 +132,7 @@ def start_session(payload: schemas.SessionStartIn, db: Session = Depends(get_db)
     db.add(session)
     db.commit()
     db.refresh(session)
+    time_topic = payload.time_topic
 
     if payload.mode == "odd_one_out":
         items = make_odd_one_out_items(
@@ -147,6 +153,12 @@ def start_session(payload: schemas.SessionStartIn, db: Session = Depends(get_db)
             difficulty=payload.difficulty,
             theme_id=theme_id,
         )
+    elif payload.mode == "time_circle":
+        items = make_time_circle_items(
+            items_total,
+            difficulty=payload.difficulty,
+            time_topic=time_topic,
+        )
     else:
         items = make_word_flash_items(
             items_total,
@@ -163,6 +175,9 @@ def start_session(payload: schemas.SessionStartIn, db: Session = Depends(get_db)
             options=i.options,
             prompt=getattr(i, "prompt", None),
             correct=getattr(i, "correct", None),
+            task_type=getattr(i, "task_type", None),
+            sequence=getattr(i, "sequence", None),
+            pairs=getattr(i, "pairs", None),
         )
         for i in items
     ]
@@ -183,6 +198,7 @@ def start_session(payload: schemas.SessionStartIn, db: Session = Depends(get_db)
         theme_id=theme_id,
         lives_start=lives_start,
         lives_left=lives_left,
+        time_topic=time_topic,
     )
 
 
@@ -398,6 +414,7 @@ def _calc_child_stats_by_mode(child: models.Child, db: Session) -> schemas.Child
         "odd_one_out": 2,
         "letter_builder": 3,
         "vocab_spell": 4,
+        "time_circle": 5,
     }
     modes_out.sort(key=lambda x: order.get(x.mode, 99))
 

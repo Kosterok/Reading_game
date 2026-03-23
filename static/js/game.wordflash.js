@@ -25,6 +25,45 @@ let hideTimer = null;
 let ringTimer = null;
 let lbTyped = "";
 let lbLocked = false;
+let timeTopics = [];
+let selectedTimeTopic = "seasons";
+
+function getSelectedDifficulty() {
+  return document.getElementById("difficultySelect")?.value || "normal";
+}
+
+function filterTimeCircleItemsByDifficulty(items, difficulty) {
+  if (!Array.isArray(items)) return [];
+
+  const allowedTaskTypes = {
+    easy: ["earlier_later", "missing", "before_after"],
+    normal: ["earlier_later", "missing", "before_after"],
+    hard: ["earlier_later", "missing", "before_after", "order"]
+  };
+
+  const allowed = allowedTaskTypes[difficulty] || allowedTaskTypes.normal;
+  const filtered = items.filter(it => allowed.includes(it.task_type));
+
+  return filtered.length ? filtered : items;
+}
+
+function getTimeCircleOptionsCount(difficulty, taskType) {
+  if (taskType === "order") return null;
+  if (difficulty === "easy") return 2;
+  if (difficulty === "normal") return 3;
+  if (difficulty === "hard") return 4;
+
+  return 3;
+}
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 function lbReset() {
   lbTyped = "";
@@ -35,6 +74,7 @@ function choosePromptForMode(mode) {
   if (mode === "letter_builder") return "";
   if (mode === "odd_one_out") return "Выбери лишнее слово:";
   if (mode === "vocab_spell") return "Вставь пропущенную букву:";
+  if (mode === "time_circle") return "";
   return "Выбери правильный вариант:";
 }
 
@@ -62,6 +102,60 @@ const saved = localStorage.getItem("rg_theme_id");
     window.filterThemesByMode(window.rg_selected_mode || "word_flash");
   }
 }
+
+
+async function loadTimeTopics() {
+  const res = await fetch("/api/time-topics");
+  timeTopics = await res.json();
+
+  const select = document.getElementById("timeTopicSelect");
+  if (!select) return;
+
+  select.innerHTML = "";
+  timeTopics.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.title;
+    select.appendChild(opt);
+  });
+
+  if (timeTopics.length) {
+    selectedTimeTopic = timeTopics[0].id;
+    select.value = selectedTimeTopic;
+  }
+
+  select.onchange = () => {
+    selectedTimeTopic = select.value;
+  };
+  if (typeof window.rebuildCustomSelectById === "function") {
+    window.rebuildCustomSelectById("timeTopicSelect");
+  }
+}
+
+function updateModeSpecificSettings(mode = null) {
+  const themeBlock = document.getElementById("themeBlock");
+  const timeTopicWrap = document.getElementById("timeTopicWrap");
+
+  if (!themeBlock || !timeTopicWrap) return;
+
+  const actualMode = mode || window.rg_selected_mode || "word_flash";
+
+  if (actualMode === "time_circle") {
+    themeBlock.style.display = "none";
+    timeTopicWrap.style.display = "";
+  } else {
+    themeBlock.style.display = "";
+    timeTopicWrap.style.display = "none";
+  }
+
+  if (typeof window.rebuildCustomSelectById === "function") {
+    window.rebuildCustomSelectById("themeSelect");
+    window.rebuildCustomSelectById("timeTopicSelect");
+    window.rebuildCustomSelectById("childSelect");
+  }
+}
+
+window.updateModeSpecificSettings = updateModeSpecificSettings;
 
 // ===================== API =====================
 async function api(path, options = {}) {
@@ -270,18 +364,39 @@ async function loadChildren() {
   const sel = $("childSelect");
   if (!sel) return;
 
+  const settingsSel = document.getElementById("settingsChildSelect");
+  const prevValue =
+    sel.value ||
+    settingsSel?.value ||
+    localStorage.getItem("rg_child_id") ||
+    "";
+
   const list = await api("/api/children");
   sel.innerHTML = "";
 
   list.forEach(c => {
     const opt = document.createElement("option");
-    opt.textContent = c.name;   // показываем только название
+    opt.textContent = c.name;
     opt.value = String(c.id);
     sel.appendChild(opt);
   });
-  // выбрать первый элемент по умолчанию и обновить кастомный селект
-  if (sel.options.length > 0) sel.value = sel.options[0].value;
+
+  if (sel.options.length > 0) {
+    const hasPrev = [...sel.options].some(opt => opt.value === prevValue);
+    sel.value = hasPrev ? prevValue : sel.options[0].value;
+    localStorage.setItem("rg_child_id", sel.value);
+  }
+
   sel.dispatchEvent(new Event("change", { bubbles: true }));
+
+  if (typeof window.rebuildCustomSelectById === "function") {
+    window.rebuildCustomSelectById("childSelect");
+  }
+
+  if (settingsSel && sel.value) {
+    settingsSel.value = sel.value;
+    settingsSel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
 }
 
 // ===================== Game flow =====================
@@ -351,6 +466,7 @@ async function start() {
 
   const childId = parseInt(sel.value || "0", 10);
   if (!childId) return alert("Выберите профиль ребёнка");
+  localStorage.setItem("rg_child_id", String(childId));
 
   const difficulty = document.getElementById("difficultySelect")?.value || "normal";
 
@@ -365,19 +481,24 @@ async function start() {
 
   // запрос ОДИН раз
   const data = await api("/api/sessions/start", {
-    method: "POST",
-    body: JSON.stringify({
-      child_id: childId,
-      mode: mode,
-      difficulty: difficulty,
-      theme_id: themeId
-    })
-  });
+  method: "POST",
+  body: JSON.stringify({
+    child_id: childId,
+    mode: mode,
+    difficulty: difficulty,
+    theme_id: themeId,
+    time_topic: mode === "time_circle" ? selectedTimeTopic : null
+  })
+});
 
 // присваивания ОДИН раз
 session = data;
-items = data.items;
+items = data.items || [];
 idx = 0;
+
+if (mode === "time_circle") {
+  items = filterTimeCircleItemsByDifficulty(items, difficulty);
+}
 
   gameMode = data.mode || mode;
 
@@ -429,7 +550,58 @@ async function nextItem() {
     if (optionsEl) optionsEl.classList.remove("lettersGrid");
 
     const wordEl = $("word");
-    if (wordEl) wordEl.classList.remove("typedWord");
+    if (wordEl) {
+      wordEl.classList.remove("typedWord");
+      wordEl.classList.remove("timeCircleQuestion");
+    }
+
+// ======= TIME CIRCLE =======
+if (gameMode === "time_circle") {
+  clearTimers();
+  setRingVisible(false);
+
+  let mainQuestion = "";
+
+  if (it.task_type === "missing") {
+    const seq = Array.isArray(it.sequence)
+      ? it.sequence.join(" • ")
+      : (it.target || "");
+    mainQuestion = `${it.prompt || "Что пропущено?"}\n${seq}`;
+  } else if (it.task_type === "earlier_later") {
+    const pairText = Array.isArray(it.pairs)
+      ? `${it.pairs[0]} или ${it.pairs[1]}`
+      : (it.target || "");
+    mainQuestion = `${it.prompt || "Что раньше / позже?"}\n${pairText}`;
+  } else if (it.task_type === "before_after") {
+    // здесь prompt уже сам является полным вопросом
+    mainQuestion = it.prompt || "";
+  } else if (it.task_type === "order") {
+    const seq = Array.isArray(it.sequence)
+      ? it.sequence.join(" • ")
+      : (it.target || "");
+    mainQuestion = `${it.prompt || "Собери порядок"}\n${seq}`;
+  } else {
+    mainQuestion = `${it.prompt || ""}\n${it.target || ""}`.trim();
+  }
+
+  if (wordEl) {
+    wordEl.textContent = mainQuestion;
+    wordEl.classList.remove("hidden");
+    wordEl.classList.add("timeCircleQuestion");
+  }
+
+  setToast("");
+
+  renderOptions(it);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      shownAt = performance.now();
+    });
+  });
+
+  return;
+}
 
 // ======= ODD ONE OUT: без фазы "показа слова", подсказка не скрывается =======
 if (gameMode === "odd_one_out") {
@@ -564,6 +736,40 @@ function renderOptions(it){
 
   optionsEl.innerHTML = "";
 
+     if (gameMode === "time_circle" && it.task_type === "order") {
+    const wordEl = $("word");
+    let picked = [];
+
+    const updatePickedView = () => {
+      if (!wordEl) return;
+      wordEl.textContent = picked.length ? picked.join(" | ") : "Собери порядок";
+      wordEl.classList.remove("hidden");
+    };
+
+    updatePickedView();
+
+    it.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "opt";
+      btn.textContent = opt;
+
+      btn.onclick = async () => {
+        btn.disabled = true;
+        picked.push(opt);
+        updatePickedView();
+
+        if (picked.length === it.options.length) {
+          const chosen = picked.join(" | ");
+          await answer(it, chosen, null);
+        }
+      };
+
+      optionsEl.appendChild(btn);
+    });
+
+    return;
+  }
+
   // ===== letter_builder: options = буквы =====
   if (gameMode === "letter_builder") {
     const wordEl = $("word");
@@ -598,13 +804,57 @@ function renderOptions(it){
   }
 
   // ===== обычные режимы: options = слова =====
-  it.options.forEach(opt => {
-    const btn = document.createElement("button");
-    btn.className = "opt";
-    btn.textContent = opt;
-    btn.onclick = () => answer(it, opt, btn);
-    optionsEl.appendChild(btn);
+  let optionsToRender = Array.isArray(it.options) ? [...it.options] : [];
+
+if (gameMode === "time_circle") {
+  const difficulty = getSelectedDifficulty();
+  const limit = getTimeCircleOptionsCount(difficulty, it.task_type);
+  const correctValue = (it.correct ?? it.target);
+
+  // что нельзя показывать среди неправильных вариантов
+  const forbidden = new Set();
+
+  if (it.task_type === "before_after") {
+    if (it.target) forbidden.add(String(it.target).trim().toLowerCase());
+  }
+
+  if (it.task_type === "earlier_later" && Array.isArray(it.pairs)) {
+    it.pairs.forEach(x => {
+      if (x != null) forbidden.add(String(x).trim().toLowerCase());
+    });
+  }
+
+  if (it.task_type === "missing" && Array.isArray(it.sequence)) {
+    it.sequence.forEach(x => {
+      if (x != null) forbidden.add(String(x).trim().toLowerCase());
+    });
+  }
+
+  let wrongOptions = optionsToRender.filter(opt => {
+    if (opt === correctValue) return false;
+    const norm = String(opt).trim().toLowerCase();
+    return !forbidden.has(norm);
   });
+
+  // если после фильтрации осталось слишком мало вариантов —
+  // возвращаем обычные неправильные, кроме правильного ответа
+  if (limit && wrongOptions.length < (limit - 1)) {
+    wrongOptions = optionsToRender.filter(opt => opt !== correctValue);
+  }
+
+  if (limit && optionsToRender.length > limit) {
+    const pickedWrong = shuffleArray(wrongOptions).slice(0, Math.max(0, limit - 1));
+    optionsToRender = shuffleArray([correctValue, ...pickedWrong]);
+  }
+}
+
+optionsToRender.forEach(opt => {
+  const btn = document.createElement("button");
+  btn.className = "opt";
+  btn.textContent = opt;
+  btn.onclick = () => answer(it, opt, btn);
+  optionsEl.appendChild(btn);
+});
 }
 
 async function answer(it, chosen, btnEl) {
@@ -780,10 +1030,12 @@ if (btnPlay) btnPlay.disabled = false;
 }
 
 // ===================== Init =====================
-(function init() {
+(async function init() {
   loadSoundPref();
-  loadThemes().catch(() => {});
-  loadChildren().catch(() => {});
+  await loadThemes().catch(() => {});
+  await loadChildren().catch(() => {});
+  await loadTimeTopics().catch(() => {});
+  updateModeSpecificSettings(window.rg_selected_mode || "word_flash");
   resetUI();
 })();
 

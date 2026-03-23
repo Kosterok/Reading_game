@@ -10,6 +10,194 @@ class WordFlashItem:
     prompt: Optional[str] = None
     correct: Optional[str] = None
 
+import random
+from dataclasses import dataclass
+
+
+TIME_CIRCLE_TOPICS = {
+    "seasons": {
+        "title": "Времена года",
+        "items": ["весна", "лето", "осень", "зима"],
+    },
+    "months": {
+        "title": "Месяцы",
+        "items": [
+            "январь", "февраль", "март", "апрель",
+            "май", "июнь", "июль", "август",
+            "сентябрь", "октябрь", "ноябрь", "декабрь",
+        ],
+    },
+    "weekdays": {
+        "title": "Дни недели",
+        "items": [
+            "понедельник", "вторник", "среда",
+            "четверг", "пятница", "суббота", "воскресенье",
+        ],
+    },
+    "dayparts": {
+        "title": "Части суток",
+        "items": ["утро", "день", "вечер", "ночь"],
+    },
+}
+
+TIME_CIRCLE_TOPIC_ORDER = ["seasons", "months", "weekdays", "dayparts"]
+TIME_CIRCLE_TASKS = ["order", "missing", "earlier_later", "before_after"]
+
+
+@dataclass
+class TimeCircleItem:
+    item_id: str
+    target: str
+    options: list[str]
+    prompt: str
+    correct: str
+    task_type: str
+    sequence: list[str] | None = None
+    pairs: list[str] | None = None
+
+
+def list_time_circle_topics():
+    return [
+        {"id": key, "title": TIME_CIRCLE_TOPICS[key]["title"]}
+        for key in TIME_CIRCLE_TOPIC_ORDER
+    ]
+
+
+def _pick_time_topic(time_topic: str | None) -> str:
+    if time_topic in TIME_CIRCLE_TOPICS:
+        return time_topic
+    return "seasons"
+
+
+def _cycle_prev(items: list[str], idx: int) -> str:
+    return items[(idx - 1) % len(items)]
+
+
+def _cycle_next(items: list[str], idx: int) -> str:
+    return items[(idx + 1) % len(items)]
+
+
+def _make_order_task(items: list[str], item_id: str) -> TimeCircleItem:
+    size = 4 if len(items) >= 4 else len(items)
+    start = random.randint(0, len(items) - size)
+    seq = items[start:start + size]
+    shuffled = seq[:]
+    random.shuffle(shuffled)
+    return TimeCircleItem(
+        item_id=item_id,
+        target=" | ".join(seq),
+        options=shuffled,
+        prompt="Расставь по порядку",
+        correct=" | ".join(seq),
+        task_type="order",
+        sequence=shuffled,
+    )
+
+
+def _make_missing_task(items: list[str], item_id: str) -> TimeCircleItem:
+    size = 4 if len(items) >= 4 else len(items)
+    start = random.randint(0, len(items) - size)
+    seq = items[start:start + size]
+
+    miss_idx = random.randint(0, len(seq) - 1)
+    correct = seq[miss_idx]
+
+    shown = seq[:]
+    shown[miss_idx] = "___"
+
+    pool = [x for x in items if x != correct]
+    distractors = random.sample(pool, k=min(3, len(pool)))
+    options = distractors + [correct]
+    random.shuffle(options)
+
+    return TimeCircleItem(
+        item_id=item_id,
+        target=" ".join(shown),
+        options=options,
+        prompt="Что пропущено?",
+        correct=correct,
+        task_type="missing",
+        sequence=shown,
+    )
+
+
+def _make_earlier_later_task(items: list[str], item_id: str) -> TimeCircleItem:
+    i1, i2 = sorted(random.sample(range(len(items)), 2))
+    a = items[i1]
+    b = items[i2]
+
+    ask_later = random.choice([True, False])
+    if ask_later:
+        prompt = "Что позже?"
+        correct = b
+    else:
+        prompt = "Что раньше?"
+        correct = a
+
+    options = [a, b]
+    random.shuffle(options)
+
+    return TimeCircleItem(
+        item_id=item_id,
+        target=f"{a} или {b}",
+        options=options,
+        prompt=prompt,
+        correct=correct,
+        task_type="earlier_later",
+        pairs=[a, b],
+    )
+
+
+def _make_before_after_task(items: list[str], item_id: str) -> TimeCircleItem:
+    idx = random.randint(0, len(items) - 1)
+    base = items[idx]
+
+    ask_after = random.choice([True, False])
+    if ask_after:
+        prompt = f"Что после: {base}?"
+        correct = _cycle_next(items, idx)
+    else:
+        prompt = f"Что перед: {base}?"
+        correct = _cycle_prev(items, idx)
+
+    pool = [x for x in items if x != correct]
+    distractors = random.sample(pool, k=min(3, len(pool)))
+    options = distractors + [correct]
+    random.shuffle(options)
+
+    return TimeCircleItem(
+        item_id=item_id,
+        target=base,
+        options=options,
+        prompt=prompt,
+        correct=correct,
+        task_type="before_after",
+    )
+
+
+def make_time_circle_items(
+    n: int,
+    difficulty: str = "normal",
+    time_topic: str | None = None,
+):
+    topic_key = _pick_time_topic(time_topic)
+    items = TIME_CIRCLE_TOPICS[topic_key]["items"]
+
+    out = []
+    for idx in range(n):
+        task = random.choice(TIME_CIRCLE_TASKS)
+        item_id = f"time_circle_{topic_key}_{idx + 1}"
+
+        if task == "order":
+            out.append(_make_order_task(items, item_id))
+        elif task == "missing":
+            out.append(_make_missing_task(items, item_id))
+        elif task == "earlier_later":
+            out.append(_make_earlier_later_task(items, item_id))
+        else:
+            out.append(_make_before_after_task(items, item_id))
+
+    return out
 # ---- Темы ----
 # В каждой теме: слова по difficulty
 THEMES = {
@@ -225,9 +413,44 @@ THEMES = {
     },
 
     10: {
-        "name": "Тёма",
+        "name": "Словарные слова",
         "easy": [
-            "скебоб","крипер","амонгус","Стив","Алекс","липтон","наггетсы","картошка фри","майнкрафт"
+            "арбуз", "берёза", "ветер", "воробей", "девочка", "деревня",
+            "дорога", "заяц", "капуста", "карандаш", "корова", "машина",
+            "молоко", "морковь", "огород", "пальто", "пенал", "петух",
+            "собака", "сорока", "тетрадь", "ученик", "учитель", "яблоко",
+            "ягода", "река", "озеро", "лес", "поле", "цветок",
+            "трава", "лист", "гриб", "ягнёнок", "кошка", "лошадь",
+            "рыба", "утка", "гусь", "курица", "домик", "окошко",
+            "доска", "мел", "ручка", "книга", "парта", "школа",
+            "игрушка", "мяч", "кукла", "ведро", "лопата"
+        ],
+        "normal": [
+            "аккуратно", "аптека", "библиотека", "велосипед", "вчера",
+            "герой", "горизонт", "директор", "железо", "интересный",
+            "картина", "календарь", "командир", "магазин", "медведь",
+            "облако", "одежда", "портфель", "природа", "работа",
+            "рисунок", "сегодня", "сейчас", "учебник",
+            "автобус", "алфавит", "багаж", "билет", "вагон",
+            "газета", "город", "двигатель", "завод", "инженер",
+            "кабинет", "касса", "класс", "коллектив", "команда",
+            "лекция", "линия", "метро", "народ", "обед",
+            "пассажир", "площадь", "профессия", "процесс", "район",
+            "режим", "система", "станция", "страна", "трамвай"
+        ],
+        "hard": [
+            "автомобиль", "агроном", "адрес", "аквариум", "апельсин",
+            "биография", "впечатление", "гражданин", "дисциплина",
+            "журналист", "инженер", "искусство", "коллекция",
+            "литература", "математика", "образование", "организация",
+            "путешествие", "расстояние", "собеседник", "сочинение",
+            "территория", "университет", "экзамен",
+            "авиация", "академия", "архитектура", "бухгалтер",
+            "воспитание", "государство", "документ", "информация",
+            "конституция", "культура", "лаборатория", "материал",
+            "направление", "образец", "производство", "промышленность",
+            "развитие", "регистрация", "сотрудничество", "строительство",
+            "технология", "управление", "характеристика", "экономика"
         ],
     },
 }

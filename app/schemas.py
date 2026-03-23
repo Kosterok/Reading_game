@@ -2,7 +2,14 @@ from pydantic import BaseModel, Field
 from typing import Literal, Optional
 
 Difficulty = Literal["easy", "normal", "hard"]
-Mode = Literal["word_flash", "survival", "odd_one_out", "letter_builder", "vocab_spell"]
+Mode = Literal[
+    "word_flash",
+    "survival",
+    "odd_one_out",
+    "letter_builder",
+    "vocab_spell",
+    "time_circle",
+]
 
 class ChildCreate(BaseModel):
     name: str = Field(min_length=1, max_length=64)
@@ -16,14 +23,19 @@ class SessionStartIn(BaseModel):
     mode: Mode = "word_flash"
     difficulty: Difficulty = "normal"
     theme_id: int = 1
+    time_topic: Optional[str] = None
 
 class WordFlashPayload(BaseModel):
     item_id: str
     exposure_ms: int
     target: str
     options: list[str]
-    prompt: Optional[str] = None  # что показываем на этапе "показ"
-    correct: Optional[str] = None  # правильный ответ (если отличается от target)
+    prompt: Optional[str] = None
+    correct: Optional[str] = None
+
+    task_type: Optional[str] = None
+    sequence: Optional[list[str]] = None
+    pairs: Optional[list[str]] = None
 
 class SessionStartOut(BaseModel):
     session_id: int
@@ -35,6 +47,7 @@ class SessionStartOut(BaseModel):
     theme_id: int
     lives_start: Optional[int] = None
     lives_left: Optional[int] = None
+    time_topic: Optional[str] = None
 
 class AttemptIn(BaseModel):
     item_id: str

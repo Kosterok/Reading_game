@@ -172,7 +172,7 @@ h1{
   background:radial-gradient(600px 200px at 50% 30%, rgba(212,175,55,.1), transparent);
 }
 .word{
-  font-size:64px;
+  font-size:32px;
   font-weight:900;
 }
 .options{
@@ -658,18 +658,25 @@ a, label,
 }
 .cselect{
   position: relative;
-  z-index: 50;      /* базовый слой над соседями */
+  z-index: 1;
 }
 
-/* сам список ещё выше */
-.cselect__list{
-  z-index: 9999;
-  margin-top: 10px;
-}
-
-/* когда открыт — поднимаем конкретный селект над всеми */
+/* когда открыт — поднимаем над ВСЕМ внутри card */
 .cselect.open{
-  z-index: 99999;
+  z-index: 9999;
+}
+
+/* список можно оставить, но уже не критично */
+.cselect__list{
+  z-index: 10000;
+}
+.card{
+  position: relative;
+  z-index: 1;
+}
+#backToMain{
+  position: relative;
+  z-index: 1;
 }
 #options.lettersGrid{
   display: grid;
@@ -830,6 +837,102 @@ a, label,
     transform: scale(1);
   }
 }
+  #screen-setup,
+#screen-setup .card{
+  overflow: visible;
+}
+
+#screen-setup .cselect{
+  position: relative;
+  z-index: 1;
+}
+
+#screen-setup .cselect.open{
+  z-index: 1000;
+}
+
+#screen-setup .cselect__list{
+  z-index: 1001;
+}
+
+#screen-setup .setup-actions{
+  position: relative;
+  z-index: 1;
+}
+  #screen-setup .setup-actions{
+  position: relative;
+  z-index: 1;
+}
+
+/* блок темы и его dropdown должны быть выше кнопок */
+#screen-setup #themeBlock{
+  position: relative;
+  z-index: 20;
+}
+
+#screen-setup #themeBlock .cselect{
+  position: relative;
+  z-index: 21;
+}
+
+#screen-setup #themeBlock .cselect.open{
+  z-index: 22;
+}
+
+#screen-setup #themeBlock .cselect__list{
+  z-index: 23;
+}
+  /* нижняя строка кнопок ниже dropdown */
+#screen-setup .setup-actions{
+  position: relative;
+  z-index: 1;
+}
+
+/* блок обычной темы */
+#screen-setup #themeBlock{
+  position: relative;
+  z-index: 20;
+}
+
+#screen-setup #themeBlock .cselect{
+  position: relative;
+  z-index: 21;
+}
+
+#screen-setup #themeBlock .cselect.open{
+  z-index: 22;
+}
+
+#screen-setup #themeBlock .cselect__list{
+  z-index: 23;
+}
+
+/* блок круга времени */
+#screen-setup #timeTopicWrap{
+  position: relative;
+  z-index: 20;
+}
+
+#screen-setup #timeTopicWrap .cselect{
+  position: relative;
+  z-index: 21;
+}
+
+#screen-setup #timeTopicWrap .cselect.open{
+  z-index: 22;
+}
+
+#screen-setup #timeTopicWrap .cselect__list{
+  z-index: 23;
+}
+  #word.timeCircleQuestion{
+  white-space: pre-line;
+  text-align: center;
+  line-height: 1.35;
+  font-size: 28px;
+  max-width: 900px;
+  margin: 0 auto;
+}
 </style>
 </head>
 
@@ -877,6 +980,13 @@ a, label,
   📘 Словарный Сундук
   <div style="font-size:13px;color:var(--muted);margin-top:6px">
     Словарные слова по категориям. Вставляй пропущенную букву и закрепляй сложные написания.
+  </div>
+</div>
+      <div class="gameCard" id="time_circle">
+  🕰️ Круг времени
+  <div style="font-size:13px;color:var(--muted);margin-top:6px">
+    Времена года, месяцы, дни недели и части суток.
+    Расставляй по порядку, находи пропуски и отвечай, что раньше, позже, перед или после.
   </div>
 </div>
       <div class="gameCard" id="btnStats">
@@ -928,39 +1038,48 @@ a, label,
 <!--    <button class="btn" onclick="createChild()">Добавить</button>-->
 <!--    <button class="btn" onclick="loadChildren()">Обновить</button>-->
 
-    <div style="font-weight:900;margin-top:12px">Выбери волшебника</div>
+   <div style="font-weight:900;margin-top:12px">Выбери волшебника</div>
+  <div class="cselect" data-for="childSelect">
+    <select id="childSelect"></select>
+    <button type="button" class="cselect__btn"></button>
+    <div class="cselect__list" role="listbox"></div>
+  </div>
 
-     <div class="cselect" data-for="childSelect">
-      <select id="childSelect"></select>
-       <button type="button" class="cselect__btn"></button>
-      <div class="cselect__list" role="listbox"></div>
-    </div>
+  <div style="font-weight:900;margin-top:12px">Выбери сложность</div>
+  <div class="cselect" data-for="difficultySelect">
+    <select id="difficultySelect">
+      <option value="easy">Новичок</option>
+      <option value="normal" selected>Ученик</option>
+      <option value="hard">Мастер</option>
+    </select>
+    <button type="button" class="cselect__btn"></button>
+    <div class="cselect__list" role="listbox"></div>
+  </div>
 
-    <div style="font-weight:900;margin-top:12px">Выбери сложность</div>
-
-    <div class="cselect" data-for="difficultySelect">
-      <select id="difficultySelect">
-        <option value="easy">Новичок</option>
-        <option value="normal" selected>Ученик</option>
-        <option value="hard">Мастер</option>
-      </select>
-      <button type="button" class="cselect__btn"></button>
-      <div class="cselect__list" role="listbox"></div>
-    </div>
-
+  <div id="themeBlock">
     <div style="font-weight:900;margin-top:12px">Выбери тему</div>
     <div class="cselect" data-for="themeSelect">
       <select id="themeSelect"></select>
       <button type="button" class="cselect__btn"></button>
       <div class="cselect__list" role="listbox"></div>
     </div>
-
-    <div style="margin-top:16px;display:flex;justify-content:space-between">
-      <button class="btn" id="backToMain">← Назад</button>
-      <button class="btn btn-primary" id="startGameBtn">Начать →</button>
-</div>
   </div>
-</section>
+
+  <div id="timeTopicWrap" style="display:none;">
+  <div style="font-weight:900;margin-top:12px">Подтема круга времени</div>
+  <div class="cselect" data-for="timeTopicSelect">
+    <select id="timeTopicSelect"></select>
+    <button type="button" class="cselect__btn"></button>
+    <div class="cselect__list" role="listbox"></div>
+  </div>
+    </div>
+
+    <div class="setup-actions" style="margin-top:16px;display:flex;justify-content:space-between">
+  <button class="btn" id="backToMain">← Назад</button>
+  <button class="btn btn-primary" id="startGameBtn">Начать →</button>
+  </div>
+  </div>
+  </section>
 
 <!-- ================== ИГРА ================== -->
 <section id="screen-play" class="screen">
@@ -1213,6 +1332,23 @@ window.rg_selected_mode = "word_flash";
 function pickMode(mode){
   window.rg_selected_mode = mode;
   filterThemesByMode(mode);
+
+  if (typeof window.updateModeSpecificSettings === "function") {
+    window.updateModeSpecificSettings(mode);
+  }
+
+  const savedId = localStorage.getItem("rg_child_id");
+  const gameSel = document.getElementById("childSelect");
+
+  if (savedId && gameSel && [...gameSel.options].some(o => o.value === savedId)) {
+    gameSel.value = savedId;
+    gameSel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  if (typeof window.rebuildCustomSelectById === "function") {
+    window.rebuildCustomSelectById("childSelect");
+  }
+
   show("setup");
 }
 
@@ -1221,10 +1357,16 @@ document.getElementById("pickSurvival").onclick = () => pickMode("survival");
 document.getElementById("pickOddOneOut").onclick = () => pickMode("odd_one_out");
 document.getElementById("pickLetterBuilder").onclick = () => pickMode("letter_builder");
 document.getElementById("pickVocabSpell").onclick = () => pickMode("vocab_spell");
+document.getElementById("time_circle").onclick = () => pickMode("time_circle");
 
 window.addEventListener("load", () => {
   setTimeout(() => {
-    filterThemesByMode(window.rg_selected_mode || "word_flash");
+    const mode = window.rg_selected_mode || "word_flash";
+    filterThemesByMode(mode);
+
+    if (typeof window.updateModeSpecificSettings === "function") {
+      window.updateModeSpecificSettings(mode);
+    }
   }, 0);
 });
 
@@ -1289,7 +1431,8 @@ const MODE_TITLES = {
   survival: "🛡️ Страж Знаний",
   odd_one_out: "🔎 Тень Лишнего",
   letter_builder: "🔮 Алхимия Слова",
-  vocab_spell: "📘 Словарный Сундук"
+  vocab_spell: "📘 Словарный Сундук",
+  time_circle: "🕰️ Круг времени"
 };
 
 
@@ -1766,14 +1909,28 @@ async function loadSettingsChildren(){
   sel.innerHTML = "";
   list.forEach(c => {
     const opt = document.createElement("option");
-    opt.value = c.id;
+    opt.value = String(c.id);
     opt.textContent = c.name;
     sel.appendChild(opt);
   });
 
-  // синхронизируем с игровым селектом
-  if (gameSel && gameSel.value) sel.value = gameSel.value;
-  sel.dispatchEvent(new Event("change", { bubbles: true }));
+  const savedId = localStorage.getItem("rg_child_id");
+
+  if (savedId && [...sel.options].some(o => o.value === savedId)) {
+    sel.value = savedId;
+  } else if (sel.options.length) {
+    sel.selectedIndex = 0;
+  }
+
+  if (gameSel && sel.value) {
+    gameSel.value = sel.value;
+    gameSel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  if (typeof window.rebuildCustomSelectById === "function") {
+    window.rebuildCustomSelectById("settingsChildSelect");
+    window.rebuildCustomSelectById("childSelect");
+  }
 }
 
 function syncActiveChild(){
@@ -1782,7 +1939,14 @@ function syncActiveChild(){
   if (!sel || !gameSel) return;
 
   gameSel.value = sel.value;
-  gameSel.dispatchEvent(new Event("change", { bubbles:true }));
+  localStorage.setItem("rg_child_id", sel.value);
+
+  gameSel.dispatchEvent(new Event("change", { bubbles: true }));
+
+  if (typeof window.rebuildCustomSelectById === "function") {
+    window.rebuildCustomSelectById("childSelect");
+    window.rebuildCustomSelectById("settingsChildSelect");
+  }
 }
 
 async function addNewChild(){
@@ -1797,9 +1961,17 @@ async function addNewChild(){
   });
 
   input.value = "";
+
+  await loadChildren();
   await loadSettingsChildren();
-  await loadChildren(); // из game.wordflash.js
+
+  const sel = document.getElementById("settingsChildSelect");
+  if (sel && sel.options.length) {
+    sel.selectedIndex = sel.options.length - 1;
+    syncActiveChild();
+  }
 }
+
 
 function updateSoundButton(){
   const btn = document.getElementById("toggleSoundBtn");
@@ -1820,6 +1992,7 @@ function toggleSoundFromSettings(){
 
 // Навигация
 document.getElementById("openSettings").onclick = async () => {
+  await loadChildren();
   await loadSettingsChildren();
   updateSoundButton();
   show("settings");
